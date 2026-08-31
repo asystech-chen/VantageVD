@@ -472,7 +472,7 @@
   const githubBtn = document.getElementById('github-btn');
   if (githubBtn) {
     githubBtn.addEventListener('click', () => {
-      chrome.tabs.create({ url: 'https://github.com/Lolitide/VirusDetector' });
+      chrome.tabs.create({ url: 'https://asystech.cn/vantage' });
     });
   }
 
@@ -488,7 +488,7 @@
   const bgContainer = document.getElementById('bg-container');
   if (bgContainer) {
     bgContainer.addEventListener('click', () => {
-      chrome.tabs.create({ url: 'https://github.com/Lolitide/VirusDetector' });
+      chrome.tabs.create({ url: 'https://asystech.cn/vantage' });
     });
   }
 
@@ -664,7 +664,7 @@
       const v = chrome.runtime.getManifest().version_name || chrome.runtime.getManifest().version;
       const subtitle = document.querySelector('.header-subtitle');
       const footerVer = document.querySelector('.footer-version');
-      if (subtitle) subtitle.textContent = 'Virus Detector v' + v;
+      if (subtitle) subtitle.textContent = 'Vantage 安全防护 v' + v;
       if (footerVer) footerVer.textContent = 'v' + v;
     } catch (e) { /* ignore */ }
   })();

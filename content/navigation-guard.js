@@ -100,7 +100,7 @@
     }
 
     var message =
-      '⚠️ Virus Detector 安全警告\n\n' +
+      '⚠️ Vantage 安全防护警告\n\n' +
       '页面试图导航到一个危险文件：\n\n' +
       '文件: ' + fileName + '\n' +
       '来源: ' + (source === 'location' ? '页面跳转 (location)' : '弹窗 (window.open)') + '\n\n' +

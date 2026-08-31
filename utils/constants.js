@@ -225,9 +225,9 @@ export const STORAGE_KEYS = {
 // 缓存有效期（毫秒）
 export const CACHE_TTL = 24 * 60 * 60 * 1000;  // 24小时
 
-// ==================== 用户上报 → GitHub Issue ====================
-/** Cloudflare Worker 上报代理 URL（部署后替换为实际 URL） */
-export const REPORT_API_URL = 'https://virus-detector-report.lolitide.workers.dev/api/report';
+// ==================== 用户上报 ====================
+/** Vantage 上报接口（TODO: 部署 asystech.cn 后端后启用；当前指向占位地址，失败静默不影响使用） */
+export const REPORT_API_URL = 'https://asystech.cn/vantage/api/report';
 
 // ==================== 更新检测 ====================
 /**
@@ -235,13 +235,13 @@ export const REPORT_API_URL = 'https://virus-detector-report.lolitide.workers.de
  * Worker 服务端请求 GitHub API 并做边缘缓存，规避 api.github.com
  * 按来源 IP 60次/小时 的未认证限额（共享出口 IP 下极易耗尽）。
  */
-export const UPDATE_VERSION_API_URL = 'https://virus-detector-report.lolitide.workers.dev/api/version';
+export const UPDATE_VERSION_API_URL = 'https://asystech.cn/vantage/api/version';
 
 /** GitHub Releases API（回退源，Worker 不可达时使用） */
-export const GITHUB_RELEASES_API_URL = 'https://api.github.com/repos/Lolitide/VirusDetector/releases/latest';
+export const GITHUB_RELEASES_API_URL = 'https://api.github.com/repos/asystech-chen/VirusDetector/releases/latest';
 
 /** GitHub Releases 页面（用户手动下载） */
-export const GITHUB_RELEASES_PAGE = 'https://github.com/Lolitide/VirusDetector/releases';
+export const GITHUB_RELEASES_PAGE = 'https://asystech.cn/vantage';
 
 /**
  * 更新渠道：'auto' | 'manual' | 'store'

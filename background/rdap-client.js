@@ -42,7 +42,7 @@ const RDAP_BOOTSTRAP_URL = 'https://data.iana.org/rdap/dns.json';
  *   - WHOIS 路径：{ success, data: { protocol:"whois", whoisData:{ "Created Date", "Expiry Date", ... } } }
  *   - RDAP 路径：{ success, data: { levels:{ registry:{ ...标准 RDAP 对象... } } } }
  */
-const RDAP_PROXY_URL = 'https://rdap.ss/api/query?q=';
+const RDAP_PROXY_URL = ''; // Vantage 特供版：禁用第三方代理（rdap.ss 未知服务，隐私/可用性风险），仅用 RDAP 主通道 + WhoisCX 回退
 
 /** 引导文件缓存有效期（毫秒），24小时。该文件通常每日 UTC 22:00 更新 */
 const BOOTSTRAP_CACHE_TTL = 24 * 60 * 60 * 1000;
@@ -562,6 +562,10 @@ function _parseProxyWhoisData(whoisData, domain) {
  * @returns {Promise<Object|null>} WhoisResult 兼容对象，失败返回 null
  */
 async function _lookupViaProxy(domain) {
+  if (!RDAP_PROXY_URL) {
+    // Vantage 特供版：代理通道已禁用，直接返回 null 走其他回退
+    return null;
+  }
   const queryUrl = `${RDAP_PROXY_URL}${encodeURIComponent(domain)}`;
   console.log(`[RdapClient] 通过代理服务查询: ${queryUrl}`);
 

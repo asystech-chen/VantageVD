@@ -135,7 +135,8 @@ function extractRegistrableDomain(hostname) {
  */
 export async function refreshPublicSuffixDNS(hostname) {
   const queryName = `${hostname}.query.publicsuffix.zone`;
-  const url = `https://dns.google/resolve?name=${encodeURIComponent(queryName)}&type=PTR`;
+  // Vantage 特供版：DoH 改用阿里公共 DNS（兼容 Google JSON API 格式，国内可达性更好）
+  const url = `https://dns.alidns.com/resolve?name=${encodeURIComponent(queryName)}&type=PTR`;
 
   try {
     const controller = new AbortController();

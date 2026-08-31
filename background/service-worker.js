@@ -464,12 +464,21 @@ async function saveWhitelist(whitelist) {
   } catch (e) { /* ignore */ }
 }
 
+// Vantage 特供版：内置官方域名白名单（后缀匹配，子域名自动继承，用户不可删除，防误杀）
+const VANTAGE_BUILTIN_WHITELIST = ['asystech.cn'];
+
 /**
  * 检查URL对应域名是否在白名单中
  * 优化：优先 O(1) 内存缓存查找，避免每次异步读存储
  */
 async function isWhitelisted(url) {
   const domain = UrlUtils.extractHostname(url);
+  // 内置官方域名豁免：精确匹配或子域名后缀匹配
+  for (const d of VANTAGE_BUILTIN_WHITELIST) {
+    if (domain === d || domain.endsWith('.' + d)) {
+      return true;
+    }
+  }
   if (_whitelistCache) {
     return _whitelistCache.has(domain);
   }
@@ -583,7 +592,7 @@ async function triggerWarningFlow(tabId, tabState) {
     chrome.notifications.create({
       type: 'basic',
       iconUrl: 'icons/icon128.png',
-      title: '⚠️ 银狐木马检测 - 风险警告',
+      title: '⚠️ Vantage 安全防护 - 风险警告',
       message: `检测到疑似钓鱼网站: ${domain}\n风险评分: ${score}分${correctUrl ? '\n正确官网: ' + correctUrl : ''}`,
       priority: 2,
       buttons: correctUrl ? [{ title: '✅ 前往官网' }] : [],
@@ -726,7 +735,7 @@ function injectBlockerFunc(archiveUrls, detectNonArchive, mode) {
       if (href && _isDangerousHref(href)) {
         // 弹确认窗
         if (!confirm(
-          '⚠️ Virus Detector 安全警告\n\n' +
+          '⚠️ Vantage 安全防护警告\n\n' +
           '脚本试图程式化触发危险文件下载：\n\n' +
           '文件: ' + (href.split('/').pop() || '未知').split('?')[0] + '\n' +
           'URL: ' + href.substring(0, 200) + '\n\n' +
@@ -1847,6 +1856,12 @@ function openDownloadConfirmation(tabState, downloadItem, fileName, downloadDoma
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!message || !message.type) { sendResponse({ error: 'invalid' }); return false; }
 
+  // Vantage 特供版加固：仅接受自身扩展发来的消息（防御其他扩展/页面伪造）
+  if (sender.id && sender.id !== chrome.runtime.id) {
+    sendResponse({ error: 'forbidden' });
+    return false;
+  }
+
   const type = message.type;
 
   switch (type) {
@@ -2427,4 +2442,4 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
 });
 
-console.log(`[ServiceWorker] ✅ 银狐木马检测扩展 v${VERSION} 已就绪`);
+console.log(`[ServiceWorker] ✅ Vantage 安全防护扩展 v${VERSION} 已就绪`);

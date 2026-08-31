@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "银狐木马检测 - Virus Detector",
+  "name": "Vantage 安全防护",
   "default_locale": "zh_CN",
   "version": "2.5.1",
   "version_name": "2.5.1",
-  "description": "检测银狐木马钓鱼网站，通过域名分析、ICP备案检查、下载检测、链接分析和代码工程化检测保护您的数字安全",
+  "description": "Vantage 内置钓鱼网站检测：域名仿冒分析、ICP备案检查、下载检测、链接分析和代码工程化检测，保护您的数字安全",
   "permissions": [
     "activeTab",
     "storage",
@@ -19,7 +19,7 @@
     "https://*/*"
   ],
   "background": {
-    "service_worker": "background/service-worker.js",
+    "scripts": ["background/service-worker.js"],
     "type": "module"
   },
   "content_scripts": [
@@ -85,7 +85,7 @@
 
   "browser_specific_settings": {
     "gecko": {
-      "id": "x2027235787@outlook.com",
+      "id": "virusdetector@asystech.cn",
       "strict_min_version": "140.0",
       "data_collection_permissions": {
         "required": ["none"],
