@@ -87,7 +87,7 @@ export const SENSITIVITY_PRESETS = {
 export const SETTINGS_DEFAULTS = {
   // === 常规设置 (basic) ===
   sensitivityPreset: 'medium',
-  theme: 'dark',
+  theme: 'auto',
   desktopNotifications: true,
   showWarningWindow: true,
   showDetectionDetails: true,

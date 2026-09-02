@@ -56,7 +56,7 @@ class SettingsApp {
       // 合并：新键用默认值，已存储的键覆盖默认值
       this.settings = { ...SETTINGS_DEFAULTS, ...stored };
       // 同步 localStorage 主题镜像（确保后续页面加载无闪烁）
-      try { localStorage.setItem('vt_theme', this.settings.theme || 'dark'); } catch (e) { }
+      try { localStorage.setItem('vt_theme', this.settings.theme || 'auto'); } catch (e) { }
       // Schema 迁移检测
       if (stored._schemaVersion !== SCHEMA_VERSION) {
         console.log('[Settings] Schema 版本变更:', stored._schemaVersion, '→', SCHEMA_VERSION);
@@ -77,7 +77,7 @@ class SettingsApp {
     try {
       await chrome.storage.local.set({ [STORAGE_KEYS.GLOBAL_SETTINGS]: toStore });
       // 同步写入 localStorage 以便页面加载时无闪烁读取主题
-      try { localStorage.setItem('vt_theme', this.settings.theme || 'dark'); } catch (e) { }
+      try { localStorage.setItem('vt_theme', this.settings.theme || 'auto'); } catch (e) { }
       this._broadcastUpdate();
       console.log('[Settings] 已自动保存');
     } catch (e) {
@@ -200,7 +200,7 @@ class SettingsApp {
           </div>`;
 
       case 'theme': {
-        const themeValue = value || 'dark';
+        const themeValue = value || 'auto';
         const themes = [
           { val: 'dark', label: '深色', icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>' },
           { val: 'light', label: '浅色', icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>' },

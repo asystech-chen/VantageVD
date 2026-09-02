@@ -199,7 +199,7 @@ const DOMAIN_DATABASE = [
 // ========== 即时通讯/社交 ==========
   {
     name: '微信',
-    officialDomains: ['weixin.qq.com', 'wechat.com', 'redhat.com'],
+    officialDomains: ['weixin.qq.com', 'wechat.com'],
     correctUrl: 'https://weixin.qq.com',
     category: SOFTWARE_CATEGORIES.IM_SOCIAL,
     keywords: ['微信', 'weixin', 'WeChat', 'wechat'],
@@ -219,6 +219,7 @@ const DOMAIN_DATABASE = [
     correctUrl: 'https://www.dingtalk.com',
     category: SOFTWARE_CATEGORIES.IM_SOCIAL,
     keywords: ['钉钉', 'dingtalk', 'DingTalk'],
+    pinyin: ['dingding'],
     isChineseBrand: true
   },
   {
@@ -398,6 +399,7 @@ const DOMAIN_DATABASE = [
     correctUrl: 'https://www.iqiyi.com',
     category: SOFTWARE_CATEGORIES.VIDEO,
     keywords: ['爱奇艺', 'iqiyi', '奇艺'],
+    pinyin: ['aiqiyi'],
     isChineseBrand: true
   },
   {
@@ -422,6 +424,7 @@ const DOMAIN_DATABASE = [
     correctUrl: 'https://www.mgtv.com',
     category: SOFTWARE_CATEGORIES.VIDEO,
     keywords: ['芒果TV', 'mgtv', '芒果台'],
+    pinyin: ['mangguo'],
     isChineseBrand: true
   },
   {
@@ -430,6 +433,7 @@ const DOMAIN_DATABASE = [
     correctUrl: 'https://www.ixigua.com',
     category: SOFTWARE_CATEGORIES.VIDEO,
     keywords: ['西瓜视频', 'ixigua'],
+    pinyin: ['xigua'],
     isChineseBrand: true
   },
   {
@@ -447,11 +451,12 @@ const DOMAIN_DATABASE = [
     correctUrl: 'https://music.163.com',
     category: SOFTWARE_CATEGORIES.MUSIC,
     keywords: ['网易云音乐', '网易云', 'cloudmusic', '163音乐'],
+    pinyin: ['wangyiyun'],
     isChineseBrand: true
   },
   {
     name: 'QQ音乐',
-    officialDomains: ['y.qq.com', 'music.moekoe.cn'],
+    officialDomains: ['y.qq.com'],
     correctUrl: 'https://y.qq.com',
     category: SOFTWARE_CATEGORIES.MUSIC,
     keywords: ['QQ音乐', 'qq音乐', 'qqmusic'],
@@ -536,6 +541,7 @@ const DOMAIN_DATABASE = [
     correctUrl: 'https://cloud.189.cn',
     category: SOFTWARE_CATEGORIES.CLOUD_STORAGE,
     keywords: ['天翼云盘', '天翼云', '电信云盘'],
+    pinyin: ['tianyi'],
     isChineseBrand: true
   },
   {
@@ -565,7 +571,7 @@ const DOMAIN_DATABASE = [
   },
   {
     name: '通义千问',
-    officialDomains: ['tongyi.aliyun.com', 'qianwen.aliyun.com', 'qianwen.com', 'dashscope.console.aliyun.com', 'chat.qwen.ai'],
+    officialDomains: ['tongyi.aliyun.com', 'qianwen.aliyun.com', 'qianwen.com', 'dashscope.console.aliyun.com', 'chat.qwen.ai', 'platform.qianwenai.com'],
     correctUrl: 'https://tongyi.aliyun.com',
     category: SOFTWARE_CATEGORIES.AI_CHAT,
     keywords: ['通义千问', 'tongyi', 'qianwen', '阿里', '千问', '百炼'],
@@ -629,7 +635,7 @@ const DOMAIN_DATABASE = [
   },
   {
     name: 'Longcat',
-    officialDomains: ['longcat.chat', 'meituan.com'],
+    officialDomains: ['longcat.chat'],
     correctUrl: 'https://longcat.ai',
     category: SOFTWARE_CATEGORIES.AI_CHAT,
     keywords: ['Longcat', 'longcat', '龙猫', '美团龙猫'],
@@ -671,7 +677,7 @@ const DOMAIN_DATABASE = [
   },
   {
     name: '7-Zip',
-    officialDomains: ['7-zip.org', '7-zip.com'],
+    officialDomains: ['7-zip.org', '7-zip.cn'],
     correctUrl: 'https://www.7-zip.org',
     category: SOFTWARE_CATEGORIES.COMPRESSION,
     keywords: ['7-Zip', '7zip', '7z'],
@@ -691,6 +697,7 @@ const DOMAIN_DATABASE = [
     correctUrl: 'https://haozip.2345.cc',
     category: SOFTWARE_CATEGORIES.COMPRESSION,
     keywords: ['好压', 'haozip', '2345好压'],
+    pinyin: ['haoya'],
     isChineseBrand: true
   },
   {
@@ -822,6 +829,7 @@ const DOMAIN_DATABASE = [
     correctUrl: 'https://www.tencent.com',
     category: SOFTWARE_CATEGORIES.IM_SOCIAL,
     keywords: ['腾讯', 'tencent', '腾讯公司', 'Tencent'],
+    pinyin: ['tengxun'],
     isChineseBrand: true
   },
   {
@@ -890,10 +898,10 @@ const DOMAIN_DATABASE = [
   },
   {
     name: 'Github',
-    officialDomains: ['github.com', 'github.blog', 'hellogithub.com', 'github.akams.cn'],
+    officialDomains: ['github.com', 'github.blog', 'github.akams.cn'],
     correctUrl: 'https://www.github.com',
     category: SOFTWARE_CATEGORIES.DEVELOPER,
-    keywords: ['Github', 'GitHub', 'hellogithub', 'github'],
+    keywords: ['Github', 'GitHub', 'github'],
     isChineseBrand: false
   },
   {
@@ -988,14 +996,6 @@ const DOMAIN_DATABASE = [
     isChineseBrand: true
   },
   {
-    name: '夜神模拟器',
-    officialDomains: ['yeshen.com', 'bignox.com'],
-    correctUrl: 'https://www.yeshen.com',
-    category: SOFTWARE_CATEGORIES.SIMULATOR,
-    keywords: ['夜神模拟器', '夜神', 'Nox', 'nox', 'NoxPlayer'],
-    isChineseBrand: true
-  },
-  {
     name: '逍遥模拟器',
     officialDomains: ['memuplay.com', 'xyaz.cn'],
     correctUrl: 'https://www.memuplay.com',
@@ -1047,7 +1047,7 @@ const DOMAIN_DATABASE = [
   },
   {
     name: 'Minecraft',
-    officialDomains: ['minecraft.net', 'minecraft.wiki', 'mojang.com', 'planetminecraft.com'],
+    officialDomains: ['minecraft.net', 'minecraft.wiki', 'mojang.com'],
     correctUrl: 'https://www.minecraft.net',
     category: SOFTWARE_CATEGORIES.GAME,
     keywords: ['Minecraft', 'minecraft', '我的世界', 'Mojang'],
@@ -1055,7 +1055,7 @@ const DOMAIN_DATABASE = [
   },
   {
     name: '蒸汽平台',
-    officialDomains: ['steamchina.com', 'steampowered.com', 'steamdb.info'],
+    officialDomains: ['steamchina.com', 'steampowered.com'],
     correctUrl: 'https://store.steamchina.com',
     category: SOFTWARE_CATEGORIES.GAME,
     keywords: ['蒸汽平台', 'steamchina', '完美世界', 'Steam中国', 'Steam', 'steam'],
@@ -1189,6 +1189,7 @@ const DOMAIN_DATABASE = [
     correctUrl: 'https://www.toutiao.com',
     category: SOFTWARE_CATEGORIES.NEWS_INFO,
     keywords: ['今日头条', '头条', 'toutiao'],
+    pinyin: ['jinritoutiao'],
     isChineseBrand: true
   },
   {

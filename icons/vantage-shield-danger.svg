@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="512" height="512" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+
+ <!-- 1. 盾牌外形：红色填充 + 加粗黑色轮廓 -->
+ <path
+ d="M 300 40
+ L 510 110
+ L 510 330
+ C 510 450 300 560 300 560
+ C 300 560 90 450 90 330
+ L 90 110
+ Z"
+ fill="#DC2626"
+ stroke="#111111"
+ stroke-width="32"
+ stroke-linejoin="round" />
+
+ <!-- 2. 感叹号竖条：白色粗线，圆角端点 -->
+ <path
+ d="M 300 160 L 300 340"
+ stroke="#FFFFFF"
+ stroke-width="80"
+ stroke-linecap="round"
+ fill="none" />
+
+ <!-- 3. 感叹号圆点：白色实心圆 -->
+ <circle
+ cx="300"
+ cy="448"
+ r="42"
+ fill="#FFFFFF" />
+
+</svg>

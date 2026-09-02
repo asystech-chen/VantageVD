@@ -12,35 +12,22 @@
     <!-- ====== SIDEBAR ====== -->
     <aside id="sidebar">
       <div class="sidebar-header">
-        <svg xmlns="http://www.w3.org/2000/svg"
-     viewBox="0 0 128 128"
-     fill="none">
-
-    <!-- 外轮廓 -->
-    <path
-        d="M22 10
-           H106
-           A16 16 0 0 1 122 26
-           V88
-           L64 120
-           L6 88
-           V26
-           A16 16 0 0 1 22 10Z"
-        stroke="#4CAF50"
-        stroke-width="8"
-        stroke-linejoin="round"
-        stroke-linecap="round"/>
-
-    <!-- 勾 -->
-    <path
-        d="M47 66
-           L62 81
-           L86 48"
-           transform="translate(0,8)"
-        stroke="#4CAF50"
-        stroke-width="10"
-        stroke-linecap="round"
-        stroke-linejoin="round"/>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" fill="none">
+    <defs>
+      <!-- V 形蓝青渐变 -->
+      <linearGradient id="sideV" x1="210" y1="210" x2="390" y2="420" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#3B82F6"/>
+        <stop offset="0.4" stop-color="#2563EB"/>
+        <stop offset="0.7" stop-color="#2DD4BF"/>
+        <stop offset="1" stop-color="#14B8A6"/>
+      </linearGradient>
+    </defs>
+    <!-- 白盾 + 翠绿描边 -->
+    <path d="M 300 40 L 510 110 L 510 330 C 510 450 300 560 300 560 C 300 560 90 450 90 330 L 90 110 Z"
+      fill="#FFFFFF" stroke="#10B981" stroke-width="32" stroke-linejoin="round"/>
+    <!-- V 图标 -->
+    <path d="M 175 195 L 300 435 L 425 195" stroke="url(#sideV)" stroke-width="75"
+      stroke-linecap="round" stroke-linejoin="round" fill="none"/>
     </svg>
         <div class="sidebar-title-group">
           <span class="sidebar-title">Vantage 安全防护</span>

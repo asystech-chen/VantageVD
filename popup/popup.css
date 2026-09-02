@@ -152,6 +152,12 @@ body {
   opacity: 0.7;
   position: absolute;
 }
+/* 双态图标：默认显示白盾+V，危险/黑名单状态显示白盾+感叹号 */
+.header-icon .icon-danger { display: none; }
+#header.header-danger .header-icon .icon-normal { display: none; }
+#header.header-danger .header-icon .icon-danger { display: block; }
+#header.header-blacklist .header-icon .icon-normal { display: none; }
+#header.header-blacklist .header-icon .icon-danger { display: block; }
 
 .header-text {
   font-size: 24px;

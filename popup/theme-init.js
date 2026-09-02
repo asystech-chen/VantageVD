@@ -5,7 +5,7 @@
  */
 (function () {
   try {
-    var t = localStorage.getItem('vt_theme') || 'dark';
+    var t = localStorage.getItem('vt_theme') || 'auto';
     if (t === 'auto') {
       t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }

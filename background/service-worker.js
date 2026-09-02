@@ -396,31 +396,63 @@ async function clearTabState(tabId) {
 }
 
 // ==================== 工具栏图标与徽章更新 ====================
-// 使用统一的护盾图标，仅通过右下角徽章（badge）的颜色和文字区分状态：
+// 双图标方案：
+//   常态（安全/白名单/内部页）→ 白盾 + V 渐变图标
+//   危险 → 整体切换为红盾 + 感叹号图标（setIcon 按 tab 切换，导航后自动恢复常态）
+// 徽章（badge）叠加在图标右下角进一步区分：
 //   setIconGreen  → 绿色底 + 分数数字 = 安全
-//   setIconRed    → 红色底 + "!"      = 危险
+//   setIconRed    → 红盾图标（徽章置空，感叹号即警示）
 //   setIconWhitelist → 蓝色底 + "✓"   = 白名单
-//   resetIcon     → 清除徽章          = 内部页面 / 未分析
+//   resetIcon     → 恢复白盾图标 + 清除徽章 = 内部页面 / 未分析
 
-/** 危险状态：红色底 + "!" 徽章 */
-function setIconRed(tabId) {
-  chrome.action.setBadgeText({ tabId, text: '!' }).catch(() => {});
-  chrome.action.setBadgeBackgroundColor({ tabId, color: '#F44336' }).catch(() => {});
+/** 常态图标路径表（白盾 + V） */
+const ICON_NORMAL = {
+  16: 'icons/icon16.png',
+  32: 'icons/icon32.png',
+  48: 'icons/icon48.png',
+  128: 'icons/icon128.png'
+};
+
+/** 危险图标路径表（红盾 + 感叹号） */
+const ICON_DANGER = {
+  16: 'icons/icon-danger-16.png',
+  32: 'icons/icon-danger-32.png',
+  48: 'icons/icon-danger-48.png',
+  128: 'icons/icon-danger-128.png'
+};
+
+/** 恢复常态白盾图标（按 tab） */
+function setIconNormal(tabId) {
+  chrome.action.setIcon({ tabId, path: ICON_NORMAL }).catch(() => {});
 }
 
-/** 安全状态：绿色底 + 分数数字徽章 */
+/** 切换为红盾感叹号图标（按 tab） */
+function setIconDanger(tabId) {
+  chrome.action.setIcon({ tabId, path: ICON_DANGER }).catch(() => {});
+}
+
+/** 危险状态：整体切换红盾 + 感叹号图标（徽章清空，图标自身即警示） */
+function setIconRed(tabId) {
+  setIconDanger(tabId);
+  chrome.action.setBadgeText({ tabId, text: '' }).catch(() => {});
+}
+
+/** 安全状态：白盾图标 + 绿色底分数数字徽章 */
 function setIconGreen(tabId, score) {
+  setIconNormal(tabId);
   chrome.action.setBadgeText({ tabId, text: String(score || 0) }).catch(() => {});
   chrome.action.setBadgeBackgroundColor({ tabId, color: '#4CAF50' }).catch(() => {});
 }
 
-/** 重置：清除徽章文字 */
+/** 重置：恢复白盾图标 + 清除徽章文字 */
 function resetIcon(tabId) {
+  setIconNormal(tabId);
   chrome.action.setBadgeText({ tabId, text: '' }).catch(() => {});
 }
 
-/** 白名单状态：蓝色底 + "✓" 徽章 */
+/** 白名单状态：白盾图标 + 蓝色底 "✓" 徽章 */
 function setIconWhitelist(tabId) {
+  setIconNormal(tabId);
   chrome.action.setBadgeText({ tabId, text: '✓' }).catch(() => {});
   chrome.action.setBadgeBackgroundColor({ tabId, color: '#2196F3' }).catch(() => {});
 }
