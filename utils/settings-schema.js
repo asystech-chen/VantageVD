@@ -10,7 +10,7 @@
 
 // ==================== Schema 版本 ====================
 /** 用于检测旧版本数据并触发迁移 */
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 // ==================== 灵敏度预设 ====================
 /**
@@ -525,24 +525,6 @@ export const SECTIONS = [
     description: '数据收集偏好和隐私设置',
     mode: 'basic',
     groups: [
-      {
-        id: 'privacy-reporting',
-        label: '数据上报',
-        iconSVG: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
-        mode: 'basic',
-        settings: [
-          {
-            key: 'allowAnonymousReporting', type: 'boolean', label: '允许匿名上报',
-            desc: '允许提交误报和钓鱼确认报告到云端，帮助改进检测准确度',
-            mode: 'basic'
-          },
-          {
-            key: 'autoWhitelistFalsePositive', type: 'boolean', label: '自动加白误报',
-            desc: '当用户标记为误报时自动将域名加入个人白名单',
-            mode: 'basic'
-          }
-        ]
-      },
       {
         id: 'privacy-actions',
         label: '数据管理',

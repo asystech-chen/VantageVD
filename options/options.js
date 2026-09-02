@@ -9,6 +9,7 @@
 
 import { SETTINGS_DEFAULTS, SECTIONS, SENSITIVITY_PRESETS, SCHEMA_VERSION, validateSetting } from '../utils/settings-schema.js';
 import { STORAGE_KEYS, MSG_TYPES, VERSION, UPDATE_CHANNEL } from '../utils/constants.js';
+import { resolveBrowserTheme } from '../utils/theme-utils.js';
 
 class SettingsApp {
   constructor() {
@@ -38,7 +39,7 @@ class SettingsApp {
     // 避免 HTML 中 hardcoded 的 general active 闪烁一帧后再跳转。
     this._renderSidebar();
     await this._loadSettings();
-    this._applyTheme();
+    await this._applyTheme();
     this._renderSection(this._activeSection);
     this._bindEvents();
     this._applyModeToDom();
@@ -58,10 +59,19 @@ class SettingsApp {
       // 同步 localStorage 主题镜像（确保后续页面加载无闪烁）
       try { localStorage.setItem('vt_theme', this.settings.theme || 'auto'); } catch (e) { }
       // Schema 迁移检测
-      if (stored._schemaVersion !== SCHEMA_VERSION) {
+      if ((stored._schemaVersion || 1) < SCHEMA_VERSION) {
         console.log('[Settings] Schema 版本变更:', stored._schemaVersion, '→', SCHEMA_VERSION);
-        // 未来在此处添加迁移逻辑
+        // v1 → v2（2026-09-03）：主题默认 dark → auto（跟随浏览器外观）。
+        // 旧版默认值 dark 会写入 storage，不迁移则升级后仍是黑底。
+        if (stored.theme === 'dark' && !stored._themeUserSet) {
+          stored.theme = 'auto';
+          this.settings.theme = 'auto';
+          try { localStorage.setItem('vt_theme', 'auto'); } catch (e) { }
+          console.log('[Settings] 迁移: theme dark → auto（跟随浏览器主题）');
+        }
       }
+      // 记录用户是否手动改过主题（防止迁移逻辑误伤真选了深色的用户）
+      this._themeUserSet = !!(stored._themeUserSet);
     } catch (e) {
       console.error('[Settings] 加载设置失败:', e);
       this.settings = { ...SETTINGS_DEFAULTS };
@@ -382,6 +392,7 @@ class SettingsApp {
             s.classList.toggle('active', s.dataset.themeVal === themeVal)
           );
           this.settings.theme = themeVal;
+          this.settings._themeUserSet = true;   // 用户手动选择，迁移逻辑不再覆盖
           this._applyTheme();
           this._saveSettings();
         }
@@ -539,7 +550,7 @@ class SettingsApp {
 
   // ==================== 设置变更 ====================
 
-  _onSettingChange(input) {
+  async _onSettingChange(input) {
     const key = input.dataset.key;
     const type = input.dataset.type;
     let value;
@@ -578,7 +589,7 @@ class SettingsApp {
 
     // 主题变更 → 立即生效
     if (key === 'theme') {
-      this._applyTheme();
+      await this._applyTheme();
     }
 
     // 灵敏度预设变更
@@ -786,22 +797,30 @@ class SettingsApp {
 
   // ==================== 主题 ====================
 
-  _applyTheme() {
+  async _applyTheme() {
     const theme = this.settings.theme || SETTINGS_DEFAULTS.theme;
-    const resolved = theme === 'auto'
-      ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-      : theme;
+    let resolved;
+    if (theme === 'auto') {
+      // 跟随浏览器 UI 外观（chrome.theme.getCurrent），失败回退系统配色
+      resolved = await resolveBrowserTheme();
+    } else {
+      resolved = theme;
+    }
     document.documentElement.dataset.theme = resolved;
   }
 
-  /** 系统配色变化时，若主题为 auto 则实时切换 */
+  /** 系统/浏览器配色变化时，若主题为 auto 则实时切换 */
   _watchSystemTheme() {
     const mql = window.matchMedia('(prefers-color-scheme: dark)');
     mql.addEventListener('change', () => {
-      if (this.settings.theme === 'auto') {
-        this._applyTheme();
-      }
+      if (this.settings.theme === 'auto') this._applyTheme();
     });
+    // 浏览器 UI 主题切换（工具栏/窗口外观变化）也实时跟随
+    if (typeof chrome !== 'undefined' && chrome.theme && chrome.theme.onUpdated) {
+      chrome.theme.onUpdated.addListener(() => {
+        if (this.settings.theme === 'auto') this._applyTheme();
+      });
+    }
   }
 
   // ==================== 确认弹窗 ====================

@@ -142,15 +142,13 @@ body {
 .header-icon {
   margin-right: 12px;
   line-height: 0;
+  flex-shrink: 0;
 }
 .header-icon svg {
-  width: 70px;
-  height: 70px;
-  top:-12px;
-  left:12px;
-  margin-bottom: 6px;
-  opacity: 0.7;
-  position: absolute;
+  width: 44px;
+  height: 44px;
+  opacity: 1;
+  display: block;
 }
 /* 双态图标：默认显示白盾+V，危险/黑名单状态显示白盾+感叹号 */
 .header-icon .icon-danger { display: none; }
@@ -163,7 +161,7 @@ body {
   font-size: 24px;
   font-weight: bold;
   color: #fff;
-  margin-left: 60px;
+  margin-left: 0;
   line-height: 17px;
   z-index: 2;
 }

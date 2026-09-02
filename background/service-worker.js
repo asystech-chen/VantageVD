@@ -395,15 +395,11 @@ async function clearTabState(tabId) {
   } catch (e) { /* ignore */ }
 }
 
-// ==================== 工具栏图标与徽章更新 ====================
-// 双图标方案：
+// ==================== 工具栏图标更新 ====================
+// 极简提示方案（2026-09-03 桶哥确认）：不给用户展示任何徽章数字/符号。
 //   常态（安全/白名单/内部页）→ 白盾 + V 渐变图标
-//   危险 → 整体切换为红盾 + 感叹号图标（setIcon 按 tab 切换，导航后自动恢复常态）
-// 徽章（badge）叠加在图标右下角进一步区分：
-//   setIconGreen  → 绿色底 + 分数数字 = 安全
-//   setIconRed    → 红盾图标（徽章置空，感叹号即警示）
-//   setIconWhitelist → 蓝色底 + "✓"   = 白名单
-//   resetIcon     → 恢复白盾图标 + 清除徽章 = 内部页面 / 未分析
+//   危险 → 整体切换为红盾 + 感叹号图标（图标自身即警示，无需数字）
+// 徽章一律清空，避免“正常网页旁边挂个 0”这类噪音。
 
 /** 常态图标路径表（白盾 + V） */
 const ICON_NORMAL = {
@@ -421,6 +417,11 @@ const ICON_DANGER = {
   128: 'icons/icon-danger-128.png'
 };
 
+/** 清除徽章（统一入口，确保任何状态下都不残留数字/符号） */
+function clearBadge(tabId) {
+  chrome.action.setBadgeText({ tabId, text: '' }).catch(() => {});
+}
+
 /** 恢复常态白盾图标（按 tab） */
 function setIconNormal(tabId) {
   chrome.action.setIcon({ tabId, path: ICON_NORMAL }).catch(() => {});
@@ -431,30 +432,28 @@ function setIconDanger(tabId) {
   chrome.action.setIcon({ tabId, path: ICON_DANGER }).catch(() => {});
 }
 
-/** 危险状态：整体切换红盾 + 感叹号图标（徽章清空，图标自身即警示） */
+/** 危险状态：整体切换红盾 + 感叹号图标（无徽章，图标即警示） */
 function setIconRed(tabId) {
   setIconDanger(tabId);
-  chrome.action.setBadgeText({ tabId, text: '' }).catch(() => {});
+  clearBadge(tabId);
 }
 
-/** 安全状态：白盾图标 + 绿色底分数数字徽章 */
+/** 安全状态：白盾图标（不显示分数徽章，score 参数保留仅为兼容调用方） */
 function setIconGreen(tabId, score) {
   setIconNormal(tabId);
-  chrome.action.setBadgeText({ tabId, text: String(score || 0) }).catch(() => {});
-  chrome.action.setBadgeBackgroundColor({ tabId, color: '#4CAF50' }).catch(() => {});
+  clearBadge(tabId);
 }
 
-/** 重置：恢复白盾图标 + 清除徽章文字 */
+/** 重置：恢复白盾图标 + 清除徽章 */
 function resetIcon(tabId) {
   setIconNormal(tabId);
-  chrome.action.setBadgeText({ tabId, text: '' }).catch(() => {});
+  clearBadge(tabId);
 }
 
-/** 白名单状态：白盾图标 + 蓝色底 "✓" 徽章 */
+/** 白名单状态：白盾图标（无徽章，不再显示蓝色 "✓"） */
 function setIconWhitelist(tabId) {
   setIconNormal(tabId);
-  chrome.action.setBadgeText({ tabId, text: '✓' }).catch(() => {});
-  chrome.action.setBadgeBackgroundColor({ tabId, color: '#2196F3' }).catch(() => {});
+  clearBadge(tabId);
 }
 
 // ==================== 白名单管理 ====================
@@ -2326,11 +2325,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           await chrome.storage.local.set({ [STORAGE_KEYS.USER_REPORTS]: reports });
           console.log('[ServiceWorker] 用户上报已保存:', reportType, domain);
 
-          // 异步 POST 到 Cloudflare Worker → 创建 GitHub Issue（fire-and-forget，不阻塞响应）
-          const reportSettings = await getSettings();
-          if (reportSettings.allowAnonymousReporting !== false) {
-            _postReportToWorker(reportType, domain, note);
-          }
+          // 上报功能暂时下线（2026-09-03）：不再 POST 到云端 Worker，本地记录与自动操作保留
+          // const reportSettings = await getSettings();
+          // if (reportSettings.allowAnonymousReporting !== false) {
+          //   _postReportToWorker(reportType, domain, note);
+          // }
 
           // 自动操作
           if (reportType === 'false_positive') {

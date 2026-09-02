@@ -695,15 +695,16 @@
 
   // ==================== 初始化 ====================
 
-  /** 从 storage 读取主题并立即应用，auto 模式通过 matchMedia 解析 */
+  /** 从 storage 读取主题并立即应用，auto 模式优先跟随浏览器 UI 主题，回退系统 */
   async function applyTheme() {
     try {
       const stored = await chrome.storage.local.get('global_settings');
       const settings = stored && stored.global_settings ? stored.global_settings : {};
-      const theme = settings.theme || 'dark';
-      const resolved = theme === 'auto'
-        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-        : theme;
+      const theme = settings.theme || 'auto';
+      let resolved = theme;
+      if (theme === 'auto') {
+        resolved = await resolveBrowserThemeCompat();
+      }
       document.documentElement.setAttribute('data-theme', resolved);
       // 同步到 localStorage 以便下次加载无闪烁（存储原始值，由 theme-init.js 解析）
       try { localStorage.setItem('vt_theme', theme); } catch (e) { }
@@ -712,10 +713,61 @@
     }
   }
 
-  // 系统配色变化时，若主题为 auto 则实时切换
+  /**
+   * popup 是普通 script（非 module），内联浏览器主题解析轻量版：
+   * 优先 chrome.theme.getCurrent()（真实浏览器 UI 外观），失败回退系统配色。
+   */
+  async function resolveBrowserThemeCompat() {
+    try {
+      if (chrome.theme && typeof chrome.theme.getCurrent === 'function') {
+        const t = await chrome.theme.getCurrent();
+        if (t && t.colors) {
+          const c = t.colors.frame || t.colors.toolbar || t.colors.tab_selected || t.colors.popup;
+          if (c) {
+            const lum = colorLuminanceCompat(c);
+            if (lum !== null && lum < 0.35) return 'dark';
+            if (lum !== null && lum > 0.6) return 'light';
+          }
+          const text = t.colors.tab_background_text || t.colors.bookmark_text;
+          if (text) {
+            const lum = colorLuminanceCompat(text);
+            if (lum !== null && lum < 0.4) return 'light';
+            if (lum !== null && lum > 0.7) return 'dark';
+          }
+        }
+      }
+    } catch (e) { /* 回退 */ }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  /** 颜色亮度解析（0-1），支持 #hex / rgb() / [r,g,b] */
+  function colorLuminanceCompat(color) {
+    try {
+      let r = 0, g = 0, b = 0;
+      if (Array.isArray(color)) { [r, g, b] = color.slice(0, 3); }
+      else if (typeof color === 'string') {
+        const s = color.trim().toLowerCase();
+        if (s.startsWith('#')) {
+          const hex = s.slice(1);
+          if (hex.length === 3) { r = parseInt(hex[0]+hex[0],16); g = parseInt(hex[1]+hex[1],16); b = parseInt(hex[2]+hex[2],16); }
+          else if (hex.length >= 6) { r = parseInt(hex.slice(0,2),16); g = parseInt(hex.slice(2,4),16); b = parseInt(hex.slice(4,6),16); }
+        } else if (s.startsWith('rgb')) {
+          const m = s.match(/[\d.]+/g);
+          if (m && m.length >= 3) { r = parseFloat(m[0]); g = parseFloat(m[1]); b = parseFloat(m[2]);
+            if (r <= 1 && g <= 1 && b <= 1) { r *= 255; g *= 255; b *= 255; } }
+        }
+      }
+      return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    } catch (e) { return 0.5; }
+  }
+
+  // 系统/浏览器主题变化时实时切换（auto 模式）
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     applyTheme();
   });
+  if (chrome.theme && chrome.theme.onUpdated) {
+    chrome.theme.onUpdated.addListener(() => { applyTheme(); });
+  }
 
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
     applyTheme().then(() => { render(); checkUpdateBadge(); });
