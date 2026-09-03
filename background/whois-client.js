@@ -1,8 +1,8 @@
 /**
  * Virus Detector — 域名注册信息查询客户端 (Whois Client)
  *
- * 统一的域名查询入口：RDAP（主）→ WhoisCX API（回退），双查询架构。
- * RDAP 基于 RFC 9082/9083 协议，WhoisCX 作为全球覆盖的备用查询。
+ * 统一的域名注册信息查询入口：RDAP 协议（RFC 9082/9083）。
+ * Vantage 特供版：WhoisCX HTTP 回退已移除（2026-09-03，仅支持明文 http，违反 Add-on Policies §4）。
  *
  * @module whois-client
  *
@@ -11,27 +11,17 @@
  *     → PSL 域名标准化 (UrlUtils.getMainDomain)
  *     → 缓存检查
  *     → 1st: RdapClient.lookup(domain)    // RDAP 协议（主查询）
- *     → 2nd: WhoisCX API                   // HTTP 回退（备用）
  *     → 写入缓存 → 返回 WhoisResult
  *
  * 缓存策略：
  *   - 内存 Map 缓存，TTL = 24 小时（由 constants.js 中的 WHOIS_CACHE_TTL 配置）
- *   - RDAP 和 WhoisCX 共享同一缓存
+ *   - 缓存按域名共享（RDAP 查询结果）
  *   - 缓存命中直接返回，不发起任何网络请求
  *   - 查询失败（网络错误、超时、HTTP 异常）不缓存，下次请求重试
  *   - RDAP 404（域名未注册）不缓存
- *
- * WhoisCX API 规范：
- *   - 接口地址：GET http://api.whoiscx.com/whois/?domain={domain}
- *   - ⚠️ 仅支持 HTTP（不支持 HTTPS）
- *   - 响应格式：application/json
- *   - 频率限制：2 秒/次（通过串行化请求保证）
  */
 
-import {
-  WHOIS_API_URL, WHOIS_CACHE_TTL, WHOIS_API_TIMEOUT,
-  VERSION
-} from '../utils/constants.js';
+import { WHOIS_CACHE_TTL } from '../utils/constants.js';
 import { RdapClient } from './rdap-client.js';
 import { refreshPublicSuffixDNS } from '../utils/url-utils.js';
 import { UrlUtils } from '../utils/url-utils.js';
@@ -46,38 +36,6 @@ import { UrlUtils } from '../utils/url-utils.js';
 
 /** @type {Map<string, WhoisCacheEntry>} */
 const _cache = new Map();
-
-// ==================== WhoisCX 速率限制 ====================
-
-/** 上次 WhoisCX API 请求完成的时间戳（用于速率限制） */
-let _lastWhoisRequestTime = 0;
-
-/** WhoisCX API 最小请求间隔（毫秒），保护免费 API 不被封禁 */
-const MIN_WHOIS_INTERVAL_DEFAULT = 2100;
-
-/** 从用户设置读取速率限制间隔，回退到默认值 */
-async function _getWhoisInterval() {
-  try {
-    const r = await chrome.storage.local.get('global_settings');
-    const gs = r.global_settings || {};
-    if (gs.whois_apiIntervalMs && gs.whois_apiIntervalMs >= 1000) return gs.whois_apiIntervalMs;
-  } catch (e) { /* ignore */ }
-  return MIN_WHOIS_INTERVAL_DEFAULT;
-}
-
-/**
- * 等待直到满足 WhoisCX 速率限制要求
- * @returns {Promise<void>}
- */
-async function _waitForWhoisRateLimit() {
-  const now = Date.now();
-  const elapsed = now - _lastWhoisRequestTime;
-  const interval = await _getWhoisInterval();
-  if (elapsed < interval) {
-    await new Promise(resolve => setTimeout(resolve, interval - elapsed));
-  }
-  _lastWhoisRequestTime = Date.now();
-}
 
 // ==================== 错误信息记录 ====================
 
@@ -112,33 +70,6 @@ function _recordError(domain, phase, message, extra = {}) {
 
   const extraSummary = Object.keys(extra).length ? JSON.stringify(extra) : '';
   console.error(`[WhoisClient] ${phaseLabel} (${domain}): ${message}${extraSummary ? ' | ' + extraSummary : ''}`);
-}
-
-// ==================== 辅助函数 ====================
-
-/**
- * 从 creation_time 日期字符串计算已注册天数
- * WhoisCX API 返回格式如 "2012-04-25 12:36:40" 或 "2012-04-25"
- * @param {string} timeStr - 创建时间字符串
- * @returns {number} 天数，解析失败返回 -1
- */
-function _parseDaysFromWhoisCxTime(timeStr) {
-  if (!timeStr || typeof timeStr !== 'string') return -1;
-  try {
-    const match = timeStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (!match) return -1;
-    const creationDate = new Date(
-      parseInt(match[1], 10),
-      parseInt(match[2], 10) - 1,
-      parseInt(match[3], 10)
-    );
-    if (isNaN(creationDate.getTime())) return -1;
-    const diffMs = Date.now() - creationDate.getTime();
-    if (diffMs < 0) return -1;
-    return Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  } catch (e) {
-    return -1;
-  }
 }
 
 // ==================== 父域名回退查询（防御加固）====================
@@ -192,166 +123,18 @@ async function _lookupParentDomains(failedDomain) {
       return result;
     }
 
-    // 尝试 WhoisCX 查询父域名
-    console.log(`[WhoisClient] 回退 WhoisCX 查询父域名: ${parentDomain}`);
-    const whoisResult = await _lookupViaWhoisCx(parentDomain);
-    if (whoisResult) {
-      if (whoisResult.creationDays > 0) {
-        _cache.set(parentDomain, { result: whoisResult, timestamp: Date.now() });
-      }
-      console.log(`[WhoisClient] 父域名 WhoisCX 查询成功: ${parentDomain} (注册 ${whoisResult.creationDays}d)`);
-      return whoisResult;
-    }
+    // WhoisCX http 回退已移除（2026-09-03）：仅支持明文 http 不合规；父域名回退仅走 RDAP（https）
   }
 
   console.warn(`[WhoisClient] 父域名回退完全失败: ${failedDomain}`);
   return null;
 }
 
-// ==================== WhoisCX API 回退查询 ====================
-
-/**
- * 通过 WhoisCX API 查询域名信息（备用路径）
- * @param {string} normalizedDomain - PSL 标准化后的域名
- * @returns {Promise<WhoisResult|null>}
- */
-async function _lookupViaWhoisCx(normalizedDomain) {
-  // 速率限制等待
-  await _waitForWhoisRateLimit();
-
-  const url = `${WHOIS_API_URL}?domain=${encodeURIComponent(normalizedDomain)}`;
-  console.log(`[WhoisClient] WhoisCX 回退查询: ${url}`);
-
-  let response;
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), WHOIS_API_TIMEOUT);
-
-    response = await fetch(url, {
-      method: 'GET',
-      signal: controller.signal,
-      headers: {
-        'Accept': '*/*',
-        'User-Agent': `VirusDetector/${VERSION} (Browser Extension; RDAP+WhoisCX)`
-      }
-    });
-
-    clearTimeout(timeoutId);
-  } catch (error) {
-    if (error.name === 'AbortError') {
-      _recordError(normalizedDomain, 'timeout',
-        `WhoisCX 请求超过 ${WHOIS_API_TIMEOUT}ms 超时`,
-        { url, timeoutMs: WHOIS_API_TIMEOUT });
-    } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      _recordError(normalizedDomain, 'connect',
-        `WhoisCX 网络连接失败: ${error.message}`,
-        { url, errorName: error.name });
-    } else {
-      _recordError(normalizedDomain, 'connect',
-        `WhoisCX 请求异常: ${error.message}`,
-        { url, errorName: error.name, errorStack: error.stack });
-    }
-    return null;
-  }
-
-  if (!response.ok) {
-    let responseBody = '';
-    try { responseBody = await response.text(); } catch (e) { /* ignore */ }
-    _recordError(normalizedDomain, 'http_status',
-      `WhoisCX 返回 HTTP ${response.status} ${response.statusText}`,
-      { url, statusCode: response.status, statusText: response.statusText, responseBody: responseBody.substring(0, 500) });
-    return null;
-  }
-
-  // 一次性读取响应体，避免多次 clone
-  let responseText = '';
-  try { responseText = await response.clone().text(); } catch (e) { /* ignore */ }
-
-  // 检查是否为 HTML（WhoisCX API 可能已废弃）
-  const trimmed = responseText.trim();
-  if (trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html')) {
-    _recordError(normalizedDomain, 'parse',
-      'WhoisCX API 可能已废弃（返回 HTML 而非 JSON），建议移除或替换此回退路径',
-      { url, responseBody: responseText.substring(0, 200) });
-    return null;
-  }
-
-  let json;
-  try {
-    json = JSON.parse(responseText);
-  } catch (parseError) {
-    _recordError(normalizedDomain, 'parse',
-      `WhoisCX JSON 解析失败: ${parseError.message}`,
-      { url, responseBody: responseText.substring(0, 500) });
-    return null;
-  }
-
-  // WhoisCX 业务状态码校验
-  if (json.status !== 1) {
-    _recordError(normalizedDomain, 'parse',
-      `WhoisCX 业务状态码异常 (status=${json.status})，预期 status=1`,
-      { url, responseJson: json });
-    return null;
-  }
-
-  if (!json.data) {
-    _recordError(normalizedDomain, 'parse',
-      'WhoisCX 响应缺少 data 字段',
-      { url, responseKeys: Object.keys(json) });
-    return null;
-  }
-
-  // 字段提取
-  const info = json.data.info || {};
-  const domainSuffix = json.data.domain_suffix || '';
-  const creationTime = info.creation_time || info.registration_time || json.data.creation_time || json.data.registration_time || '';
-  const expirationTime = info.expiration_time || info.registration_expiration_time || json.data.expiration_time || '';
-
-  // creation_days 多层回退
-  let creationDaysRaw = info.creation_days;
-  if (creationDaysRaw === undefined || creationDaysRaw === null) {
-    creationDaysRaw = json.data.creation_days;
-  }
-
-  let creationDays = -1;
-  if (typeof creationDaysRaw === 'number' && creationDaysRaw > 0) {
-    creationDays = creationDaysRaw;
-  } else if (typeof creationDaysRaw === 'number' && creationDaysRaw === 0) {
-    // API 返回 0，尝试从 creation_time 计算
-    const calculated = _parseDaysFromWhoisCxTime(creationTime);
-    creationDays = calculated > 0 ? calculated : -1;
-  } else {
-    // 没有 creation_days，尝试从 creation_time 计算
-    const calculated = _parseDaysFromWhoisCxTime(creationTime);
-    creationDays = calculated > 0 ? calculated : -1;
-  }
-
-  // valid_days 多层回退
-  let validDaysRaw = info.valid_days;
-  if (validDaysRaw === undefined || validDaysRaw === null) {
-    validDaysRaw = json.data.valid_days;
-  }
-
-  return {
-    domain: json.data.domain || normalizedDomain,
-    domainSuffix,
-    creationDays,
-    validDays: typeof validDaysRaw === 'number' ? validDaysRaw : -1,
-    creationTime,
-    expirationTime,
-    isExpire: info.is_expire === 1,
-    registrarName: info.registrar_name || '',
-    domainStatus: Array.isArray(info.domain_status) ? info.domain_status : [],
-    nameServer: Array.isArray(info.name_server) ? info.name_server : [],
-    queryTime: json.data.query_time || ''
-  };
-}
-
 // ==================== 公开接口 ====================
 
 export class WhoisClient {
   /**
-   * 查询域名的注册信息（RDAP 主 → WhoisCX 回退）
+   * 查询域名的注册信息（RDAP 主查询；WhoisCX http 回退已移除）
    *
    * @param {string} domain - 要查询的域名（如 "example.com" 或 "www.baidu.com"）
    * @returns {Promise<WhoisResult|null>} 查询结果，失败时返回 null
@@ -420,37 +203,21 @@ export class WhoisClient {
       return result;
     }
 
-    // 6. RDAP 返回 "不支持"（如 .cn 无公开 RDAP）→ 不视为错误，直接走 WhoisCX 回退
+    // 6. RDAP 无结果 → 记录原因（WhoisCX http 明文回退已于 2026-09-03 移除，注册时间按“未知”中性处理）
     if (rdapResult?._rdap?.unsupported) {
-      console.log(`[WhoisClient] RDAP 不支持此 TLD (.${normalizedDomain.split('.').pop()})，回退 WhoisCX`);
+      console.log(`[WhoisClient] RDAP 不支持此 TLD (.${normalizedDomain.split('.').pop()})，注册时间未知`);
     } else if (rdapResult?._rdap?.notFound) {
-      console.warn(`[WhoisClient] RDAP 未找到域名，尝试 WhoisCX 回退: ${normalizedDomain}`);
+      console.warn(`[WhoisClient] RDAP 未找到域名: ${normalizedDomain}`);
     } else {
-      // RDAP 完全失败（返回 null）
       const errInfo = RdapClient.lastError;
-      console.warn(`[WhoisClient] RDAP 查询失败${errInfo ? ' (' + errInfo.phase + ')' : ''}，回退 WhoisCX: ${normalizedDomain}`);
+      console.warn(`[WhoisClient] RDAP 查询失败${errInfo ? ' (' + errInfo.phase + ')' : ''}: ${normalizedDomain}`);
     }
 
-    // 7. 回退：WhoisCX API
-    const whoisResult = await _lookupViaWhoisCx(normalizedDomain);
-    if (whoisResult) {
-      if (whoisResult.creationDays > 0) {
-        _cache.set(normalizedDomain, { result: whoisResult, timestamp: Date.now() });
-        console.log(`[WhoisClient] WhoisCX 缓存写入: ${normalizedDomain} (creationDays=${whoisResult.creationDays})`);
-      }
-
-      _lastError = null;
-      const ageLabel = whoisResult.creationDays >= 0 ? `注册 ${whoisResult.creationDays}d` : '注册时间未知';
-      console.log(`[WhoisClient] WhoisCX 查询成功: ${normalizedDomain} (${ageLabel}, 注册商: ${whoisResult.registrarName || '未知'})`);
-      return whoisResult;
-    }
-
-    // 8. 两条路径均失败 → 尝试逐级向上回退父域名
-    //    处理多级公共后缀子域名（如 a.b.github.io 等），逐级剥离标签查找父域名的注册信息
+    // 7. RDAP 无结果 → 逐级向上回退父域名（仅 RDAP，https；处理 a.b.github.io 等多级后缀场景）
     const fallbackResult = await _lookupParentDomains(normalizedDomain);
     if (fallbackResult) return fallbackResult;
 
-    console.error(`[WhoisClient] RDAP 和 WhoisCX 均查询失败: ${normalizedDomain}`);
+    console.error(`[WhoisClient] RDAP 查询失败且父域名回退无结果: ${normalizedDomain}`);
     return null;
   }
 

@@ -13,7 +13,7 @@
  * 注意：更新检测以 chrome.runtime.getManifest().version 为唯一真源，不依赖此常量；
  * 发版时仍需同步修改此处 + manifest.json + README（本常量已与 manifest 脱节过一次，见 v2.5.1）。
  */
-export const VERSION = '2.5.1';
+export const VERSION = '2.5.2';
 
 // ==================== 评分体系 ====================
 /** 触发警告的总分阈值（注入拦截 + 警告窗口 + 图标变红） */
@@ -225,9 +225,10 @@ export const STORAGE_KEYS = {
 // 缓存有效期（毫秒）
 export const CACHE_TTL = 24 * 60 * 60 * 1000;  // 24小时
 
-// ==================== 用户上报 ====================
-/** Vantage 上报接口（TODO: 部署 asystech.cn 后端后启用；当前指向占位地址，失败静默不影响使用） */
-export const REPORT_API_URL = 'https://asystech.cn/vantage/api/report';
+// ==================== 用户上报（已下线） ====================
+// 上报功能已下线（2026-09-03）：SUBMIT_REPORT 仅保存本地记录。
+// 若将来部署 asystech.cn 后端恢复上报，须同步 data_collection_permissions 声明 + 安装后 consent UI，
+// 否则违反 Mozilla Add-on Policies §6（Data Collection and Transmission）。
 
 // ==================== 更新检测 ====================
 /**
@@ -238,7 +239,7 @@ export const REPORT_API_URL = 'https://asystech.cn/vantage/api/report';
 export const UPDATE_VERSION_API_URL = 'https://asystech.cn/vantage/api/version';
 
 /** GitHub Releases API（回退源，Worker 不可达时使用） */
-export const GITHUB_RELEASES_API_URL = 'https://api.github.com/repos/asystech-chen/VirusDetector/releases/latest';
+export const GITHUB_RELEASES_API_URL = 'https://api.github.com/repos/asystech-chen/VantageVD/releases/latest';
 
 /** GitHub Releases 页面（用户手动下载） */
 export const GITHUB_RELEASES_PAGE = 'https://asystech.cn/vantage';
@@ -261,14 +262,10 @@ export const UPDATE_RETRY_DELAY_MINUTES = 60;
 /** RDAP IANA 引导文件 URL（TLD → RDAP 服务器映射） */
 export const RDAP_BOOTSTRAP_URL = 'https://data.iana.org/rdap/dns.json';
 
-/** WhoisCX API 基础 URL（Whois 回退查询） */
-export const WHOIS_API_URL = 'http://api.whoiscx.com/whois/';
-
-/** RDAP 查询结果缓存有效期（毫秒），24小时。缓存由 WhoisClient 共享管理 */
+/** 域名查询结果缓存有效期（毫秒），24小时。缓存由 WhoisClient 共享管理 */
 export const WHOIS_CACHE_TTL = 24 * 60 * 60 * 1000;
-
-/** WhoisCX API 请求超时（毫秒） */
-export const WHOIS_API_TIMEOUT = 8000;
+// ⚠️ WhoisCX（api.whoiscx.com）回退源已移除（2026-09-03）：仅支持 http 明文，
+// 违反 Mozilla Add-on Policies §4（远程传输必须加密）。RDAP 查不到的 TLD 按"注册时间未知"中性处理。
 
 /** RDAP 客户端请求超时（毫秒） */
 export const RDAP_REQUEST_TIMEOUT = 10000;

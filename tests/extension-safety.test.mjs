@@ -54,11 +54,12 @@ test('the MAIN-world guard exits before patching authentication pages', () => {
   assert.match(navigationGuard, /console/);
 });
 
-test('Manifest V3 uses only a service worker background entry', () => {
+test('Manifest V3 uses a Firefox event-page background entry', () => {
   assert.equal(manifest.manifest_version, 3);
-  assert.equal(manifest.background.service_worker, 'background/service-worker.js');
+  // Firefox 不支持 background.service_worker（AMO 审核会拒）；用 scripts + type:module 事件页
+  assert.deepEqual(manifest.background.scripts, ['background/service-worker.js']);
   assert.equal(manifest.background.type, 'module');
-  assert.equal(manifest.background.scripts, undefined);
+  assert.equal(manifest.background.service_worker, undefined);
 });
 
 test('navigation guard bypasses auth URLs and can unload for dynamic login', () => {

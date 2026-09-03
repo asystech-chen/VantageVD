@@ -167,11 +167,9 @@ export const SETTINGS_DEFAULTS = {
   // === 缓存与性能 (advanced) ===
   cache_ttlHours: 24,
   api_timeoutMs: 8000,
-  whois_apiIntervalMs: 2100,
   warning_cooldownMs: 5000,
 
   // === 隐私与数据 (basic) ===
-  allowAnonymousReporting: true,
   autoWhitelistFalsePositive: true,
 
   // === ICP 备案 API 核验（配置页可控） ===
@@ -491,8 +489,7 @@ export const SECTIONS = [
         iconSVG: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
         mode: 'hidden',
         settings: [
-          { key: 'api_timeoutMs', type: 'number', label: 'API 请求超时(ms)', desc: 'RDAP/Whois API 请求超时时间', min: 1000, max: 30000, step: 500, mode: 'advanced' },
-          { key: 'whois_apiIntervalMs', type: 'number', label: 'Whois 请求间隔(ms)', desc: 'WhoisCX API 最小请求间隔（避免被限流）', min: 1000, max: 10000, step: 100, mode: 'advanced' }
+          { key: 'api_timeoutMs', type: 'number', label: 'API 请求超时(ms)', desc: 'RDAP API 请求超时时间', min: 1000, max: 30000, step: 500, mode: 'advanced' }
         ]
       },
       {

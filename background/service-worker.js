@@ -32,7 +32,7 @@ import { UrlUtils } from '../utils/url-utils.js';
 import {
   SCORE_THRESHOLD, DOWNLOAD_CONFIRM_THRESHOLD, RISK_LEVEL, MSG_TYPES,
   STORAGE_KEYS, CACHE_TTL, DETECT_NON_ARCHIVE_FILES_DEFAULT,
-  VERSION, REPORT_API_URL, GITHUB_RELEASES_API_URL, GITHUB_RELEASES_PAGE,
+  VERSION, GITHUB_RELEASES_API_URL, GITHUB_RELEASES_PAGE,
   UPDATE_VERSION_API_URL, UPDATE_CHANNEL, UPDATE_CHECK_TIMEOUT_MS, UPDATE_RETRY_DELAY_MINUTES,
   ICP_API_CONFIG, SCORE_SITE_BLACKLIST
 } from '../utils/constants.js';
@@ -1576,58 +1576,8 @@ async function _applyIcpUpdate(snapshot, icpApi) {
   }
 }
 
-/**
- * 异步 POST 用户上报数据到 Cloudflare Worker → 创建 GitHub Issue。
- * Fire-and-forget：不阻塞响应，失败不影响本地存储。
- *
- * @param {string} reportType - 'false_positive' | 'confirmed_phish'
- * @param {string} domain - 上报的域名
- * @param {string} note - 用户备注
- */
-async function _postReportToWorker(reportType, domain, note) {
-  try {
-    // 收集当前标签页的检测详情（用于丰富 Issue body）
-    let score = 0;
-    let ruleResults = null;
-    let pageUrl = '';
-    try {
-      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tabs.length > 0) {
-        const ts = await loadTabState(tabs[0].id);
-        score = ts.score || 0;
-        ruleResults = ts.ruleResults || null;
-        pageUrl = ts.url || tabs[0].url || '';
-      }
-    } catch (e) { /* 获取 tabState 失败，使用默认值 */ }
-
-    const payload = {
-      reportType,
-      domain,
-      score,
-      version: VERSION,
-      timestamp: Date.now(),
-      note: note || '',
-      ruleResults,
-      url: pageUrl
-    };
-
-    const response = await fetch(REPORT_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (response.ok) {
-      const result = await response.json().catch(() => ({}));
-      console.log('[ServiceWorker] GitHub Issue 已创建:', result.issueUrl || 'success');
-    } else {
-      console.warn('[ServiceWorker] Worker 返回错误:', response.status, await response.text().catch(() => ''));
-    }
-  } catch (e) {
-    // Worker 不可用时静默失败（本地存储已保存）
-    console.warn('[ServiceWorker] 上报 Worker 不可达:', e.message);
-  }
-}
+// 用户上报网络传输已下线（2026-09-03）：SUBMIT_REPORT 仅保存本地记录 + 自动操作，不再 POST 云端。
+// 若将来部署 asystech.cn 后端恢复上报，须同步 data_collection_permissions 声明与 consent UI（Add-on Policies §6）。
 
 // ==================== 事件监听 ====================
 
@@ -2323,13 +2273,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }
 
           await chrome.storage.local.set({ [STORAGE_KEYS.USER_REPORTS]: reports });
-          console.log('[ServiceWorker] 用户上报已保存:', reportType, domain);
-
-          // 上报功能暂时下线（2026-09-03）：不再 POST 到云端 Worker，本地记录与自动操作保留
-          // const reportSettings = await getSettings();
-          // if (reportSettings.allowAnonymousReporting !== false) {
-          //   _postReportToWorker(reportType, domain, note);
-          // }
+          console.log('[ServiceWorker] 用户上报已保存(本地):', reportType, domain);
 
           // 自动操作
           if (reportType === 'false_positive') {

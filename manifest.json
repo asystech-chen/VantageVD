@@ -2,8 +2,8 @@
  "manifest_version": 3,
  "name": "Vantage 安全防护",
  "default_locale": "zh_CN",
- "version": "2.5.1",
- "version_name": "2.5.1",
+ "version": "2.5.2",
+ "version_name": "2.5.2",
  "description": "Vantage 内置钓鱼网站检测：域名仿冒分析、ICP备案检查、下载检测、链接分析和代码工程化检测，保护您的数字安全",
  "permissions": [
   "activeTab",
