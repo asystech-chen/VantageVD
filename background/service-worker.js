@@ -34,9 +34,11 @@ import {
   STORAGE_KEYS, CACHE_TTL, DETECT_NON_ARCHIVE_FILES_DEFAULT,
   VERSION, GITHUB_RELEASES_API_URL, GITHUB_RELEASES_PAGE,
   UPDATE_VERSION_API_URL, UPDATE_CHANNEL, UPDATE_CHECK_TIMEOUT_MS, UPDATE_RETRY_DELAY_MINUTES,
-  ICP_API_CONFIG, SCORE_SITE_BLACKLIST
+  ICP_API_CONFIG, SCORE_SITE_BLACKLIST,
+  DOWNLOAD_INTENT_KEYWORDS, DOWNLOAD_INTENT_PATTERN_SOURCES
 } from '../utils/constants.js';
 import { SETTINGS_DEFAULTS } from '../utils/settings-schema.js';
+import { isFullyTrusted } from '../utils/exemptions/index.js';
 
 // ==================== URL 协议守卫 ====================
 
@@ -659,7 +661,11 @@ async function injectDownloadBlocker(tabId, archiveUrls = [], mode = 'full') {
     await chrome.scripting.executeScript({
       target: { tabId },
       func: injectBlockerFunc,
-      args: [archiveUrls, settings.detectNonArchiveFiles, mode],
+      // 扩展名/关键词列表从 constants.js 并集生成传入（页面注入函数保持自包含，附字面量兜底）
+      args: [archiveUrls, settings.detectNonArchiveFiles, mode, {
+        downloadKeywords: DOWNLOAD_INTENT_KEYWORDS,
+        intentPatterns: DOWNLOAD_INTENT_PATTERN_SOURCES
+      }],
       injectImmediately: true
     }).catch(e => console.error('[ServiceWorker] 注入拦截脚本失败:', e));
   } catch (e) {
@@ -712,9 +718,10 @@ function removeDownloadBlockerFunc() {
  * 注入到页面的拦截函数（独立定义以支持 args 传递）
  * @param {string[]} archiveUrls - 已知压缩包链接
  */
-function injectBlockerFunc(archiveUrls, detectNonArchive, mode) {
+function injectBlockerFunc(archiveUrls, detectNonArchive, mode, extLists) {
   // mode: 注入模式 — 'lightweight' (≥50) | 'standard' (≥80) | 'full' (≥100, 默认)
   // detectNonArchive: 是否检测非压缩包可执行文件（默认 false，由设置页控制）
+  // extLists: SW 从 constants.js 传入的关键词/正则列表（注入函数自包含，附字面量兜底）
   detectNonArchive = detectNonArchive || false;
   mode = mode || 'full';
 
@@ -850,14 +857,24 @@ function injectBlockerFunc(archiveUrls, detectNonArchive, mode) {
   // 全部危险扩展名（用于视觉禁用，不受开关影响）
   var DANGEROUS_EXTS = ARCHIVE_EXTS.concat(NON_ARCHIVE_EXE_EXTS);
 
-  // 下载相关中英文关键词（用于匹配按钮文本和下载意图）
-  var DOWNLOAD_KEYWORDS = [
+  // 下载相关中英文关键词（用于匹配按钮文本和下载意图；优先取 SW 传入的并集）
+  var DOWNLOAD_KEYWORDS = (extLists && extLists.downloadKeywords) || [
     '下载', 'download', '下載', 'ダウンロード',
     '立即安装', '立即下载', '免费下载', '高速下载', '安全下载',
     '点击下载', '直接下载', '本地下载', '官方下载',
     'Download Now', 'Free Download', 'Download Free',
     'install', 'setup', 'get started'
   ];
+
+  // 下载意图通配正则（仅注入拦截）：中文「xx版」、英文「xx version」
+  var INTENT_PATTERN_SOURCES = (extLists && extLists.intentPatterns) || [
+    '\\S{1,8}版(?!本)',
+    '[a-z0-9][\\w.]{0,14}[\\s-]+version\\b'
+  ];
+  var INTENT_PATTERNS = [];
+  for (var pi = 0; pi < INTENT_PATTERN_SOURCES.length; pi++) {
+    try { INTENT_PATTERNS.push(new RegExp(INTENT_PATTERN_SOURCES[pi], 'i')); } catch (e) { /* 非法源串忽略 */ }
+  }
 
   // ══════════════════════════════════════════════════════
   // Part 2: 辅助函数
@@ -892,6 +909,9 @@ function injectBlockerFunc(archiveUrls, detectNonArchive, mode) {
     var combined = text + ' ' + aria + ' ' + title;
     for (var i = 0; i < DOWNLOAD_KEYWORDS.length; i++) {
       if (combined.indexOf(DOWNLOAD_KEYWORDS[i].toLowerCase()) !== -1) return true;
+    }
+    for (var pj = 0; pj < INTENT_PATTERNS.length; pj++) {
+      if (INTENT_PATTERNS[pj].test(combined)) return true;
     }
     return false;
   }
@@ -1671,6 +1691,12 @@ chrome.downloads.onCreated.addListener(async (downloadItem) => {
     // 白名单检查：白名单中的网站不拦截下载
     if (tabState.isWhitelisted) {
       console.log('[ServiceWorker] 白名单网站，跳过下载检测:', tabState.domain);
+      return;
+    }
+
+    // 完全信任域名（gov.cn / edu.cn / ac.cn 等）：不拦截下载
+    if (isFullyTrusted(tabState.domain)) {
+      console.log('[ServiceWorker] 完全信任域名，跳过下载检测:', tabState.domain);
       return;
     }
 

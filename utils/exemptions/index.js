@@ -279,3 +279,35 @@ export const TRUSTED_PLATFORMS = new Set([
   'about.me',
   'linktr.ee',
 ]);
+
+// ==================== 3. 完全信任域名（跳过所有检测） ====================
+// 政府/教育/科研机构域名，由主管部门严格管理，攻击者无法注册。
+// → 完全跳过所有检测（等同于用户白名单），子域名自动继承信任。
+export const FULLY_TRUSTED_DOMAIN_SUFFIXES = new Set([
+  // —— 政府机构 ——
+  'gov.cn',       // 中国政府（严格审批，攻击者无法注册）
+  'gov.hk',       // 香港政府
+  'gov.tw',       // 台湾政府
+  // —— 教育机构 ——
+  'edu.cn',       // 中国教育机构（CERNET 管理）
+  // —— 科研机构 ——
+  'ac.cn',        // 中国科研机构（如中国科学院 cas.ac.cn）
+]);
+
+/**
+ * 判断域名是否属于完全信任域（应跳过所有检测）。
+ * 通过后缀匹配实现子域名自动继承：www.moe.gov.cn → gov.cn 命中 → true
+ *
+ * @param {string} domain - 主机名（如 "www.moe.gov.cn" 或 "moe.gov.cn"）
+ * @returns {boolean} 是否完全信任
+ */
+export function isFullyTrusted(domain) {
+  if (!domain) return false;
+  const normalized = domain.replace(/^www\./i, '').toLowerCase();
+  if (FULLY_TRUSTED_DOMAIN_SUFFIXES.has(normalized)) return true;
+  const parts = normalized.split('.');
+  for (let i = 1; i < parts.length; i++) {
+    if (FULLY_TRUSTED_DOMAIN_SUFFIXES.has(parts.slice(i).join('.'))) return true;
+  }
+  return false;
+}

@@ -106,6 +106,25 @@ export const DOWNLOAD_BUTTON_KEYWORDS = [
   '立即安装', '一键安装', '安装包'
 ];
 
+// 下载意图关键词（全量并集，统一小写去重，供注入层匹配下载意图）
+export const DOWNLOAD_INTENT_KEYWORDS = [
+  '下载', 'download', '下載', '立即下载', '免费下载', '高速下载',
+  '安全下载', '点击下载', '直接下载', '本地下载', '官方下载',
+  'download now', 'free download', 'download free',
+  '立即安装', '一键安装', '安装包',
+  'down', 'dl', 'get', 'setup', 'install', 'free', 'app',
+  'exe', 'msi', 'dmg', 'apk', 'zip', 'rar', '7z',
+  'get started', 'ダウンロード'
+];
+
+// 下载意图通配正则源串（仅注入拦截使用，不参与站点评分）
+// 中文「xx版」：版前 1~8 个非空白字符且版后不紧跟"本"（排除"版本"）；
+// 英文「xx version」：单词/连字符 + version（忽略大小写）。
+export const DOWNLOAD_INTENT_PATTERN_SOURCES = [
+  '\\S{1,8}版(?!本)',
+  '[a-z0-9][\\w.]{0,14}[\\s-]+version\\b'
+];
+
 // 文件扩展名（规则四B-b）
 export const FILE_EXTENSIONS = [
   '.exe', '.msi', '.dmg', '.apk', '.appx', '.deb', '.rpm',
