@@ -13,7 +13,7 @@
  * 注意：更新检测以 chrome.runtime.getManifest().version 为唯一真源，不依赖此常量；
  * 发版时仍需同步修改此处 + manifest.json + README（本常量已与 manifest 脱节过一次，见 v2.5.1）。
  */
-export const VERSION = '2.5.2';
+export const VERSION = '2.5.3';
 
 // ==================== 评分体系 ====================
 /** 触发警告的总分阈值（注入拦截 + 警告窗口 + 图标变红） */
@@ -23,7 +23,8 @@ export const SCORE_THRESHOLD = 100;
 export const DOWNLOAD_CONFIRM_THRESHOLD = 80;
 
 // 新规则分值
-export const SCORE_RULE_1 = 60;              // 规则一：域名仿冒
+export const SCORE_RULE_1 = 60;              // 规则一：域名仿冒（高置信）
+export const SCORE_RULE_1_WEAK = 20;         // 规则一：弱仿冒嫌疑（低置信，单独不足以触发警告）
 export const SCORE_RULE_2_HIGH = 40;         // 规则二：压缩包下载（域名已有≥30嫌疑）
 export const SCORE_RULE_2_LOW = 10;          // 规则二：压缩包下载（弱信号）
 export const SCORE_RULE_3 = 50;             // 规则三：ICP备案号缺失（所有网站）

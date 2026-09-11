@@ -25,6 +25,7 @@ export const SENSITIVITY_PRESETS = {
       scoreThreshold: 150,
       downloadConfirmThreshold: 120,
       rule1_score: 50,
+      rule1_weakScore: 15,
       rule2_highScore: 30,
       rule2_lowScore: 5,
       rule3_score: 35,
@@ -104,6 +105,7 @@ export const SETTINGS_DEFAULTS = {
   scoreThreshold: 100,
   downloadConfirmThreshold: 80,
   rule1_score: 60,
+  rule1_weakScore: 20,
   rule2_highScore: 40,
   rule2_lowScore: 10,
   rule2_domainSuspicionThreshold: 30,
@@ -607,7 +609,8 @@ export const SECTIONS = [
         iconSVG: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>',
         mode: 'developer',
         settings: [
-          { key: 'rule1_score', type: 'number', label: '域名仿冒分值', desc: '命中域名仿冒时的加分值', min: 0, max: 200, step: 5, mode: 'advanced' }
+          { key: 'rule1_score', type: 'number', label: '域名仿冒分值', desc: '命中域名仿冒时的加分值', min: 0, max: 200, step: 5, mode: 'advanced' },
+          { key: 'rule1_weakScore', type: 'number', label: '弱仿冒嫌疑分值', desc: '低置信仿冒（4-5 字符关键词段匹配 / 标签子串包含）的加分值，单独不足以触发警告', min: 0, max: 200, step: 5, mode: 'advanced' }
         ]
       },
       {

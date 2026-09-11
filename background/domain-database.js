@@ -25,15 +25,28 @@
  *   - keywordToEntries：关键词 → 品牌记录列表 映射（O(1) 反查）
  *   - sortedKeywords：按长度降序排列（优先匹配长品牌词，避免短词吞掉长词）
  *
- * 仿冒检测策略（5 规则递进 + 去连字符二次检测，命中即返回）：
- *   A. 精确段匹配    → 标签段完全等于品牌关键词（所有长度）
- *   B. 标签子串包含  → 关键词在任一 label 中出现（仅 kw ≥ 5，任意位置不要求边界）
- *   C. 关键词堆叠    → 同一关键词在所有段中精确出现 ≥ 3 次（所有长度）
- *   D. 约束编辑距离  → Levenshtein ≤ 2 且 lenDiff ≤ 2（仅 kw ≥ 6）
+ * 仿冒检测策略（分级判定：strong / weak，命中即返回，strong 优先）：
+ *   STRONG（高置信，评分引擎按 rule1_score 计分，默认 60）：
+ *     S1 强关键词精确段匹配  → 段等于长度 ≥ 6 的 ASCII 品牌关键词（deepseek / weixin ...）
+ *     S2 官方注册域标签段    → 段等于官方域名的注册域标签（长度 ≥ 6）
+ *     S3 形近字符混淆        → 段经形近等价类规范化后与品牌词全等（g00gle → google）
+ *     S4 关键词堆叠          → 同一关键词在所有段中精确出现 ≥ 3 次
+ *     S5 约束编辑距离        → 编辑距离 ≤ 2（相邻换位按 1 计）；
+ *                              dist=1 需公共前后缀 ≥ 4；dist=2 需公共前缀 ≥ 5 且长度差 ≤ 1
+ *   WEAK（低置信，按 rule1_weakScore 计分，默认 20，单独不足以触发警告）：
+ *     W1 弱关键词精确段匹配  → 段等于长度 4-5 的 ASCII 关键词（kdocs / momo / edge ...）
+ *     W2 短关键词（≤ 3）     → 仅当注册域标签本身等于关键词（qq.cn / 7z.com）
+ *     W3 标签子串包含        → 关键词出现在某个 label 中（≥ 5；5-6 字符须贴标签边界；
+ *                              低特异性通用词不参与）
  *
- *   去连字符二次检测：若域名含 - 或 _，去除后重新跑 A/B/C 规则，
- *   覆盖连字符插入 + 子串嵌入的复合变形（如 pay-pal-login.hl.cn）。
+ *   误报护栏（2026-09-12 新增，详见 patches 记录）：
+ *     - 命名空间归属：品牌官方域名的注册域父级视为该品牌所有
+ *       （pinyin.sogou.com → sogou.com 及其全部子域不再判仿冒）
+ *     - 低特异性关键词（edge / steam / soul / clash）：不参与子串匹配，段匹配仅按 weak 计分
+ *     - 去连字符二次检测：若域名含 - 或 _，去除后重跑上述全部规则（pay-pal-login.hl.cn）
  */
+import { UrlUtils } from '../utils/url-utils.js';
+
 export const SOFTWARE_CATEGORIES = {
   SECURITY: '安全软件',
   BROWSER: '浏览器',
@@ -101,7 +114,7 @@ const DOMAIN_DATABASE = [
   },
   {
     name: '金山毒霸',
-    officialDomains: ['duba.net', 'ijinshan.com'],
+    officialDomains: ['duba.net', 'ijinshan.com', 'duba.com'],
     correctUrl: 'https://www.duba.net',
     category: SOFTWARE_CATEGORIES.SECURITY,
     keywords: ['金山毒霸', '毒霸', 'duba', 'jinshan', 'ijinshan'],
@@ -158,7 +171,12 @@ const DOMAIN_DATABASE = [
   },
   {
     name: '火狐浏览器',
-    officialDomains: ['mozilla.org', 'firefox.com'],
+    officialDomains: [
+      'mozilla.org', 'firefox.com',
+      // Mozilla 家族域名（2026-09-12 核验：mozilla.com/.net 的 NS 与 mozilla.org 完全一致；
+      // thunderbird.net 为 MZLA/Mozilla 产品域；firefoxusercontent.com 出现在 Firefox 源码中）
+      'mozilla.com', 'mozilla.net', 'mozillademos.org', 'thunderbird.net', 'firefoxusercontent.com'
+    ],
     correctUrl: 'https://www.firefox.com/zh-CN/',
     category: SOFTWARE_CATEGORIES.BROWSER,
     keywords: ['火狐', 'Firefox', 'mozilla', 'Mozilla', '火狐浏览器'],
@@ -166,7 +184,14 @@ const DOMAIN_DATABASE = [
   },
   {
     name: '谷歌',
-    officialDomains: ['google.com', 'google.cn', 'googlemail.com', 'gmail.com', 'android.com', 'chromereleases.googleblog.com', 'chromium.org', 'chromium.googlesource.com'],
+    officialDomains: [
+      'google.com', 'google.cn', 'googlemail.com', 'gmail.com', 'android.com',
+      'chromereleases.googleblog.com', 'chromium.org', 'chromium.googlesource.com',
+      // Google 自有基础设施域名（2026-09-12 核验：googlesource 的 NS 为 *.google.com）
+      'googleapis.com', 'googleusercontent.com', 'google-analytics.com',
+      'googlevideo.com', 'googlesyndication.com', 'googleadservices.com',
+      'googlesource.com', 'google.dev', 'googleplay.com', 'withgoogle.com', 'googleblog.com'
+    ],
     correctUrl: 'https://www.google.com/',
     category: SOFTWARE_CATEGORIES.BROWSER,
     keywords: ['google', 'Google', '谷歌'],
@@ -182,7 +207,7 @@ const DOMAIN_DATABASE = [
   },
   {
     name: 'Edge浏览器',
-    officialDomains: ['microsoft.com'],
+    officialDomains: ['microsoft.com', 'microsoftedge.com'],
     correctUrl: 'https://www.microsoft.com/zh-cn/edge',
     category: SOFTWARE_CATEGORIES.BROWSER,
     keywords: ['Edge', 'Microsoft Edge', 'edge浏览器'],
@@ -456,7 +481,7 @@ const DOMAIN_DATABASE = [
   },
   {
     name: 'QQ音乐',
-    officialDomains: ['y.qq.com'],
+    officialDomains: ['y.qq.com', 'qqmusic.com'],
     correctUrl: 'https://y.qq.com',
     category: SOFTWARE_CATEGORIES.MUSIC,
     keywords: ['QQ音乐', 'qq音乐', 'qqmusic'],
@@ -496,7 +521,7 @@ const DOMAIN_DATABASE = [
   },
   {
     name: '苹果音乐',
-    officialDomains: ['music.apple.com'],
+    officialDomains: ['music.apple.com', 'applemusic.com'],
     correctUrl: 'https://music.apple.com',
     category: SOFTWARE_CATEGORIES.MUSIC,
     keywords: ['苹果音乐', 'apple music', 'Apple Music'],
@@ -669,7 +694,7 @@ const DOMAIN_DATABASE = [
 // ========== 压缩工具 ==========
   {
     name: 'WinRAR',
-    officialDomains: ['rarlab.com', 'win-rar.com', 'winrar.com.cn'],
+    officialDomains: ['rarlab.com', 'win-rar.com', 'winrar.com.cn', 'winrar.com'],
     correctUrl: 'https://www.rarlab.com',
     category: SOFTWARE_CATEGORIES.COMPRESSION,
     keywords: ['WinRAR', 'winrar', 'rar'],
@@ -711,7 +736,7 @@ const DOMAIN_DATABASE = [
 // ========== 电商 ==========
   {
     name: '淘宝',
-    officialDomains: ['taobao.com', 'tmall.com'],
+    officialDomains: ['taobao.com', 'tmall.com', 'tmall.hk'],
     correctUrl: 'https://www.taobao.com',
     category: SOFTWARE_CATEGORIES.E_COMMERCE,
     keywords: ['淘宝', 'taobao', '天猫', 'tmall', '淘'],
@@ -817,7 +842,7 @@ const DOMAIN_DATABASE = [
   },
   {
     name: '阿里云',
-    officialDomains: ['aliyun.com', 'aliyuncs.com', 'alibabacloud.com'],
+    officialDomains: ['aliyun.com', 'aliyuncs.com', 'alibabacloud.com', 'aliyuncdn.com'],
     correctUrl: 'https://www.aliyun.com',
     category: SOFTWARE_CATEGORIES.DEVELOPER,
     keywords: ['阿里云', 'aliyun', 'alibaba cloud'],
@@ -898,7 +923,12 @@ const DOMAIN_DATABASE = [
   },
   {
     name: 'Github',
-    officialDomains: ['github.com', 'github.blog', 'github.akams.cn'],
+    officialDomains: [
+      'github.com', 'github.blog', 'github.akams.cn',
+      // GitHub 自有基础设施域名（2026-09-12 核验：NS 均为 nsone/awsdns，与 github.com 同源）
+      'githubusercontent.com', 'githubassets.com', 'githubapp.com',
+      'githubstatus.com', 'github.dev', 'githubcopilot.com', 'githubuniverse.com'
+    ],
     correctUrl: 'https://www.github.com',
     category: SOFTWARE_CATEGORIES.DEVELOPER,
     keywords: ['Github', 'GitHub', 'github'],
@@ -1055,7 +1085,7 @@ const DOMAIN_DATABASE = [
   },
   {
     name: '蒸汽平台',
-    officialDomains: ['steamchina.com', 'steampowered.com'],
+    officialDomains: ['steamchina.com', 'steampowered.com', 'steamcommunity.com'],
     correctUrl: 'https://store.steamchina.com',
     category: SOFTWARE_CATEGORIES.GAME,
     keywords: ['蒸汽平台', 'steamchina', '完美世界', 'Steam中国', 'Steam', 'steam'],
@@ -1194,7 +1224,7 @@ const DOMAIN_DATABASE = [
   },
   {
     name: '百度',
-    officialDomains: ['baidu.com'],
+    officialDomains: ['baidu.com', 'baidubce.com'],
     correctUrl: 'https://www.baidu.com',
     category: SOFTWARE_CATEGORIES.NEWS_INFO,
     keywords: ['百度', 'baidu', 'Baidu'],
@@ -1278,11 +1308,88 @@ const keywordToEntries = new Map();
 /** 所有去重关键词，按长度从长到短排序（优先匹配长品牌词） */
 let sortedKeywords = [];
 
-/** 短关键词（length ≤ 3），仅参与精确段匹配和堆叠检测 */
+/** 短关键词（length ≤ 3）：仅当注册域标签本身等于关键词时按 weak 计分 */
 const shortKeywords = new Set();
 
-/** 长关键词（length ≥ 4），参与所有检测规则 */
-const longKeywords = new Set();
+/** 弱关键词（length 4-5）：段精确匹配时按 weak 计分 */
+const weakKeywords = new Set();
+
+/** 强关键词（length ≥ 6）：段精确匹配时按 strong 计分 */
+const strongKeywords = new Set();
+
+/**
+ * 低特异性关键词（通用英文词）：不参与标签子串匹配，段匹配仅按 weak 计分。
+ * 避免 slack-edge.com / kdocs-team.com / steam.com 等合法域名被判为仿冒。
+ */
+const LOW_SPECIFICITY_KEYWORDS = new Set(['edge', 'steam', 'soul', 'clash']);
+
+/**
+ * 命名空间归属索引：品牌官方域名的注册域父级 → 品牌条目。
+ * 例：pinyin.sogou.com → sogou.com；sogou.com 及其全部子域不再判仿冒。
+ * 仅由 officialDomains 推导，攻击者无法注册的品牌域不会因此被放行。
+ */
+const ownedNamespaces = new Map();
+
+/** 官方注册域标签（长度 ≥ 6）→ 品牌条目：用于 S2「段等于官方注册域标签」判定 */
+const officialLabelSet = new Map();
+
+/** 形近字符索引：规范化后的字符串 → { original, entry }（用于 S3） */
+const homoglyphIndex = new Map();
+
+// ---- 形近字符等价类（高置信组，仅单字符映射 + 双字符组）----
+const HOMOGLYPH_SINGLE = {
+  '0': 'o',
+  '1': 'l', 'i': 'l',
+  '3': 'e',
+  '5': 's',
+  '8': 'b',
+  '9': 'g',
+  '4': 'a'
+};
+const HOMOGLYPH_PAIRS = [['rn', 'm'], ['vv', 'w'], ['nn', 'm']];
+
+/**
+ * 形近字符规范化（S3）：g00gle → google、googie → google、rnicrosoft → microsoft。
+ * 仅用于「变换后是否等于某品牌词」的比对，不修改原始域名。
+ */
+function normalizeHomoglyph(str) {
+  let s = str.toLowerCase();
+  for (const [from, to] of HOMOGLYPH_PAIRS) {
+    s = s.split(from).join(to);
+  }
+  let out = '';
+  for (const ch of s) out += (HOMOGLYPH_SINGLE[ch] || ch);
+  return out;
+}
+
+/**
+ * Damerau-Levenshtein（最优字符串对齐）：编辑距离，相邻换位按 1 计。
+ * 用于 S5 的错拼判定（alipya → alipay 不再被当作距离 2 而漏判）。
+ */
+function _damerau(a, b) {
+  const m = a.length;
+  const n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  const d = [];
+  for (let i = 0; i <= m; i++) d.push(new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) d[i][0] = i;
+  for (let j = 0; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(
+        d[i - 1][j] + 1,
+        d[i][j - 1] + 1,
+        d[i - 1][j - 1] + cost
+      );
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+      }
+    }
+  }
+  return d[m][n];
+}
 
 /**
  * 将字符串按分隔符 `-` 和 `_` 拆分为段数组。
@@ -1300,6 +1407,18 @@ function buildIndex() {
       const normalized = domain.replace(/^www\./i, '').toLowerCase();
       domainToEntry.set(normalized, entry);
       allOfficialDomains.add(normalized);
+
+      // 命名空间归属：注册域父级视为该品牌所有（pinyin.sogou.com → sogou.com）
+      const mainDomain = UrlUtils.getMainDomain(normalized);
+      if (mainDomain && !ownedNamespaces.has(mainDomain)) {
+        ownedNamespaces.set(mainDomain, entry);
+      }
+
+      // 官方注册域标签（≥ 6 字符）→ S2 判定用
+      const mainLabel = mainDomain ? mainDomain.split('.')[0] : '';
+      if (mainLabel.length >= 6 && !officialLabelSet.has(mainLabel)) {
+        officialLabelSet.set(mainLabel, entry);
+      }
     }
   }
 
@@ -1321,8 +1440,26 @@ function buildIndex() {
   for (const kw of allKw) {
     if (kw.length <= 3) {
       shortKeywords.add(kw);
+    } else if (kw.length <= 5) {
+      weakKeywords.add(kw);
     } else {
-      longKeywords.add(kw);
+      strongKeywords.add(kw);
+    }
+
+    // 形近字符索引（仅纯 ASCII 关键词，长度 ≥ 4）
+    if (kw.length >= 4 && /^[a-z0-9]+$/.test(kw)) {
+      const norm = normalizeHomoglyph(kw);
+      if (!homoglyphIndex.has(norm)) {
+        homoglyphIndex.set(norm, { original: kw, entry: keywordToEntries.get(kw)[0] });
+      }
+    }
+  }
+
+  // 官方注册域标签一并纳入形近索引
+  for (const [label, entry] of officialLabelSet) {
+    const norm = normalizeHomoglyph(label);
+    if (!homoglyphIndex.has(norm)) {
+      homoglyphIndex.set(norm, { original: label, entry });
     }
   }
 }
@@ -1370,132 +1507,180 @@ export class DomainDatabase {
 
     // 1.5 官方域名守卫：若当前域名本身就是官方域名（或其子域名），
     // 则直接返回 null，避免将官方网站误判为仿冒。
-    // 此检查覆盖 _evaluateRule1 中用 mainDomain（注册域）查 findByDomain
-    // 但完整 hostname 是子域名官方域的场景。
     if (this.findByDomain(normalized)) {
       return null;
     }
 
+    // 1.6 命名空间归属守卫：注册域父级属于某品牌 → 该品牌的真·子域，不判仿冒。
+    //     例：officialDomains 含 pinyin.sogou.com → sogou.com 归「搜狗」所有。
+    const mainDomain = UrlUtils.getMainDomain(normalized);
+    if (mainDomain && ownedNamespaces.has(mainDomain)) {
+      return null;
+    }
+
     /**
-     * 对一组 labels/segments 执行规则 A/B/C，任一命中即返回结果。
-     * @param {string[]} labels       标签数组
-     * @param {string[]} allSegs      所有段平铺数组
-     * @param {string[][]} labelSegs  每个 label 的段数组
+     * 构造命中结果。
+     * @param {Object} entry 品牌条目
+     * @param {'strong'|'weak'} severity 置信级别
+     * @param {string} matchType 命中类型
+     * @param {string} matchedBy 中文说明
+     */
+    const _build = (entry, severity, matchType, matchedBy) => ({
+      entry,
+      severity,
+      officialDomain: entry.officialDomains[0],
+      correctUrl: entry.correctUrl,
+      matchType,
+      matchedBy
+    });
+
+    /**
+     * 对一组 labels 执行全部分级规则（strong 优先于 weak）。
+     * @param {string[]} labels 标签数组
      * @param {'original'|'dehyphened'} source 来源标记
      * @returns {Object|null}
      */
-    const _checkRules = (labels, allSegs, labelSegs, source) => {
+    const _evaluate = (labels, source) => {
+      const labelSegments = labels.map(splitIntoSegments);
+      const allSegments = labelSegments.flat();
+      const suffix = source === 'dehyphened' ? '（去连字符）' : '';
+
+      // ---- S4 关键词堆叠（同一关键词精确出现 ≥ 3 次）----
       for (const kw of sortedKeywords) {
-        // ---- 规则 A：精确段匹配（所有长度关键词） ----
-        for (const segs of labelSegs) {
-          for (const seg of segs) {
-            if (seg === kw) {
-              const entry = keywordToEntries.get(kw)[0];
-              return {
-                entry,
-                officialDomain: entry.officialDomains[0],
-                correctUrl: entry.correctUrl,
-                matchType: 'segment_exact_match',
-                matchedBy: `段 "${seg}" 精确匹配关键词 "${kw}"` +
-                  (source === 'dehyphened' ? '（去连字符）' : '')
-              };
-            }
-          }
-        }
-
-        // ---- 规则 B：标签子串包含（仅 kw >= 5，任意位置不需边界） ----
-        if (kw.length >= 5) {
-          for (const label of labels) {
-            if (label.includes(kw)) {
-              const entry = keywordToEntries.get(kw)[0];
-              return {
-                entry,
-                officialDomain: entry.officialDomains[0],
-                correctUrl: entry.correctUrl,
-                matchType: 'substring_include',
-                matchedBy: `标签 "${label}" 包含关键词 "${kw}"` +
-                  (source === 'dehyphened' ? '（去连字符）' : '')
-              };
-            }
-          }
-        }
-
-        // ---- 规则 C：关键词堆叠（所有长度，阈值 ≥3） ----
+        if (kw.length < 2) continue;
         let hitCount = 0;
-        for (const seg of allSegs) {
+        for (const seg of allSegments) {
           if (seg === kw) hitCount++;
         }
         if (hitCount >= 3) {
-          const entry = keywordToEntries.get(kw)[0];
-          return {
-            entry,
-            officialDomain: entry.officialDomains[0],
-            correctUrl: entry.correctUrl,
-            matchType: 'keyword_stuffing',
-            matchedBy: `关键词 "${kw}" 在域名段中重复出现 ${hitCount} 次` +
-              (source === 'dehyphened' ? '（去连字符）' : '')
-          };
+          return _build(keywordToEntries.get(kw)[0], 'strong', 'keyword_stuffing',
+            `关键词 "${kw}" 在域名段中重复出现 ${hitCount} 次` + suffix);
         }
       }
+
+      // ---- S3 形近字符混淆（g00gle / googie / rnicrosoft）----
+      for (const segs of labelSegments) {
+        for (const seg of segs) {
+          if (seg.length < 4) continue;
+          const normSeg = normalizeHomoglyph(seg);
+          if (normSeg === seg) continue;
+          const hit = homoglyphIndex.get(normSeg);
+          // seg 与 original 相同说明是原词自身（关键词含 i/l 等自映射），并非真实形近变体
+          if (hit && seg !== hit.original) {
+            return _build(hit.entry, 'strong', 'homoglyph',
+              `形近字符混淆: "${seg}" 规范化后 ≈ "${hit.original}"` + suffix);
+          }
+        }
+      }
+
+      // ---- S1 强关键词精确段匹配（长度 ≥ 6）----
+      for (const kw of strongKeywords) {
+        for (const segs of labelSegments) {
+          for (const seg of segs) {
+            if (seg === kw) {
+              return _build(keywordToEntries.get(kw)[0], 'strong', 'segment_exact_match',
+                `段 "${seg}" 精确匹配品牌关键词 "${kw}"` + suffix);
+            }
+          }
+        }
+      }
+
+      // ---- S2 官方注册域标签段匹配（长度 ≥ 6，如 qianwenai / deepseek）----
+      for (const segs of labelSegments) {
+        for (const seg of segs) {
+          if (officialLabelSet.has(seg)) {
+            const entry = officialLabelSet.get(seg);
+            return _build(entry, 'strong', 'official_label_segment',
+              `段 "${seg}" 等于「${entry.name}」的官方注册域标签` + suffix);
+          }
+        }
+      }
+
+      // ---- S5 约束编辑距离（错拼；相邻换位按 1 计）----
+      //   安全护栏，避免把「真实品牌域名」或「两个无关品牌词」误判为仿冒：
+      //     (a) 关键词含中文时取其纯 ASCII 核心：标签即等于该核心 → 真实品牌，跳过
+      //     (b) dist=1 要求公共前缀/后缀 ≥ 4（同一词的错别字）
+      //     (c) dist=2 要求公共前缀 ≥ 5 且长度差 ≤ 1
+      //         （避免 qianxin↔qianwen、abchina↔oschina 这类两个不同词被误伤）
+      const _typosquat = (target, kw) => {
+        const kwAscii = kw.replace(/[一-鿿]/g, '');
+        // 中文/混合关键词不做错拼比对：ASCII 域名与中英混合词做编辑距离没有意义
+        // （曾造成 steamcn.com ≈ "steam中国" 这类误报）
+        if (!kwAscii || kwAscii.length < 6 || kwAscii.length !== kw.length) return null;
+        if (target === kwAscii) return null; // (a) 真实品牌核心，非仿冒
+        const lenDiff = Math.abs(target.length - kw.length);
+        if (lenDiff > 2) return null;
+        const dist = _damerau(target, kw);
+        if (dist < 1 || dist > 2) return null;
+        const lcp = longestCommonPrefix(target, kw);
+        const lcs = longestCommonSuffix(target, kw);
+        if (dist === 1) {
+          if (Math.max(lcp, lcs) < 4) return null; // (b)
+        } else {
+          if (lcp < 5 || lenDiff > 1) return null; // (c)
+        }
+        return _build(keywordToEntries.get(kw)[0], 'strong', 'typosquat',
+          `编辑距离 ${dist}: "${target}" ≈ "${kw}"` + suffix);
+      };
+      for (const kw of strongKeywords) {
+        // 整标签（注册域整体错拼，如 firefpx.com）
+        for (const label of labels) {
+          const hit = _typosquat(label, kw);
+          if (hit) return hit;
+        }
+        // 段级（错拼段 + 修饰段，如 deepseekk-login.com）
+        for (const segs of labelSegments) {
+          for (const seg of segs) {
+            if (seg.length < 4) continue;
+            const hit = _typosquat(seg, kw);
+            if (hit) return hit;
+          }
+        }
+      }
+
+      // ---- W1 弱关键词精确段匹配（长度 4-5，如 kdocs / momo / edge）----
+      for (const kw of weakKeywords) {
+        for (const segs of labelSegments) {
+          for (const seg of segs) {
+            if (seg === kw) {
+              return _build(keywordToEntries.get(kw)[0], 'weak', 'segment_exact_match',
+                `段 "${seg}" 匹配品牌关键词 "${kw}"` + suffix);
+            }
+          }
+        }
+      }
+
+      // ---- W2 短关键词（≤ 3）：仅当注册域标签本身等于关键词（qq.cn / 7z.com）----
+      const registerLabel = labels.length >= 2 ? labels[labels.length - 2] : labels[0];
+      if (registerLabel && shortKeywords.has(registerLabel)) {
+        return _build(keywordToEntries.get(registerLabel)[0], 'weak', 'segment_exact_match',
+          `注册域 "${registerLabel}" 匹配品牌关键词` + suffix);
+      }
+
+      // ---- W3 标签子串包含（关键词 ≥ 5；5-6 字符须贴标签边界；低特异性词不参与）----
+      for (const kw of sortedKeywords) {
+        if (kw.length < 5 || LOW_SPECIFICITY_KEYWORDS.has(kw)) continue;
+        for (const label of labels) {
+          if (!label.includes(kw)) continue;
+          if (kw.length < 7 && !label.startsWith(kw) && !label.endsWith(kw)) continue;
+          return _build(keywordToEntries.get(kw)[0], 'weak', 'substring_include',
+            `标签 "${label}" 包含关键词 "${kw}"` + suffix);
+        }
+      }
+
       return null;
     };
 
-    // 2. 构建原始 labels / segments
+    // 2. 原始域名 → 全部分级规则
     const labels = normalized.split('.');
-    const allSegments = [];
-    const labelSegments = [];
-    for (const label of labels) {
-      const segs = splitIntoSegments(label);
-      labelSegments.push(segs);
-      for (const s of segs) allSegments.push(s);
-    }
-
-    // 3. 原始域名 → 规则 A/B/C
-    let result = _checkRules(labels, allSegments, labelSegments, 'original');
+    let result = _evaluate(labels, 'original');
     if (result) return result;
 
-    // 4. 去连字符二次检测（覆盖 pay-pal-login.hl.cn 等复合变形）
+    // 3. 去连字符二次检测（覆盖 pay-pal-login.hl.cn 等复合变形）
     if (normalized.includes('-') || normalized.includes('_')) {
       const deHyphened = normalized.replace(/[-_]/g, '');
-      const dhLabels = deHyphened.split('.');
-      const dhAllSegs = [];
-      const dhLabelSegs = [];
-      for (const label of dhLabels) {
-        const segs = splitIntoSegments(label);
-        dhLabelSegs.push(segs);
-        for (const s of segs) dhAllSegs.push(s);
-      }
-      result = _checkRules(dhLabels, dhAllSegs, dhLabelSegs, 'dehyphened');
+      result = _evaluate(deHyphened.split('.'), 'dehyphened');
       if (result) return result;
-    }
-
-    // 5. 规则 D：约束编辑距离（仅 kw >= 6，dist 1-2，lenDiff ≤ 2）
-    //    安全护栏：避免把「真实品牌域名」或「两个无关品牌词」误判为仿冒。
-    //      (a) 关键词含中文时取其纯 ASCII 核心：若输入标签即等于该核心（如 tencent.com
-    //          命中关键词"tencent云"），属真实品牌而非仿冒 → 跳过。
-    //      (b) 要求标签与关键词存在≥3字符的连续公共前缀或后缀，确保是"同一词的错别字"
-    //          而非两个不同品牌词（如 youdao 与 doubao 仅公共后缀"ao"=2 字符，应判为不同品牌）。
-    for (const kw of sortedKeywords) {
-      if (kw.length < 6) continue;
-      const kwAscii = kw.replace(/[一-鿿]/g, '');
-      for (const label of labels) {
-        if (Math.abs(label.length - kw.length) > 2) continue;
-        if (kwAscii && label === kwAscii) continue; // (a) 真实品牌核心，非仿冒
-        const dist = _levenshtein(label, kw);
-        if (dist >= 1 && dist <= 2) {
-          const lcp = longestCommonPrefix(label, kw);
-          const lcs = longestCommonSuffix(label, kw);
-          if (Math.max(lcp, lcs) < 3) continue; // (b) 两个不同品牌词，跳过
-          const entry = keywordToEntries.get(kw)[0];
-          return {
-            entry,
-            officialDomain: entry.officialDomains[0],
-            correctUrl: entry.correctUrl,
-            matchType: 'typosquat',
-            matchedBy: `Levenshtein 距离 ${dist}: "${label}" ≈ "${kw}"`
-          };
-        }
-      }
     }
 
     return null;

@@ -37,7 +37,7 @@ import { UrlUtils } from '../utils/url-utils.js';
 import { TrustedPlatforms } from '../utils/trusted-platforms.js';
 import { TrustedDownloadHosts } from '../utils/trusted-download-hosts.js';
 import {
-  SCORE_THRESHOLD, SCORE_RULE_1, SCORE_RULE_2_HIGH, SCORE_RULE_2_LOW,
+  SCORE_THRESHOLD, SCORE_RULE_1, SCORE_RULE_1_WEAK, SCORE_RULE_2_HIGH, SCORE_RULE_2_LOW,
   SCORE_RULE_3, SCORE_RULE_5, SCORE_RULE_5_PARTIAL, RISK_LEVEL,
   SCORE_RULE_4A_SAME_PAGE, SCORE_RULE_4A_DEAD_LINK,
   SCORE_RULE_4A_DOWNLOAD_LINK_BONUS,
@@ -438,15 +438,23 @@ export class ScoringEngine {
     }
 
     // 检测域名仿冒（使用完整 hostname，子域名中可能含品牌关键词）
+    // 2026-09-12：分级计分 —— strong 高置信（默认 60）/ weak 低置信（默认 20）。
+    // weak 单独不足以触及警告阈值（100），需与 ICP / 下载 / 链接等其他规则叠加，
+    // 从根上减少「品牌自有域名 / 通用词」类误报。
     const spoof = DomainDatabase.detectSpoof(domain);
     if (spoof) {
-      result.score = resolveSetting('rule1_score', SCORE_RULE_1);  // +60
+      const isWeak = spoof.severity === 'weak';
+      result.score = isWeak
+        ? resolveSetting('rule1_weakScore', SCORE_RULE_1_WEAK)
+        : resolveSetting('rule1_score', SCORE_RULE_1);
       result.triggered = true;
+      result.severity = spoof.severity;
       result.matchedEntry = spoof.entry;
       result.correctUrl = spoof.correctUrl;
       result.officialName = spoof.entry.name;
-      result.detail = `域名仿冒检测: ${spoof.matchedBy}`;
-      result.detailCN = `域名仿冒: 疑似冒充「${spoof.entry.name}」(${spoof.correctUrl})`;
+      result.detail = `域名仿冒检测(${spoof.severity}): ${spoof.matchedBy}`;
+      result.detailCN = `域名仿冒: 疑似冒充「${spoof.entry.name}」(${spoof.correctUrl})` +
+        (isWeak ? '（低置信）' : '');
       return result;
     }
 

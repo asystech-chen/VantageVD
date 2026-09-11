@@ -1,6 +1,6 @@
 {
   "name": "virus-detector",
-  "version": "2.5.2",
+  "version": "2.5.3",
   "private": true,
   "type": "module",
   "description": "Development tooling for the Virus Detector browser extension",
