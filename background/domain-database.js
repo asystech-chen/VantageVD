@@ -279,6 +279,94 @@ const DOMAIN_DATABASE = [
     keywords: ['Soul', 'soulapp'],
     isChineseBrand: true
   },
+  {
+    name: 'Facebook',
+    officialDomains: ['facebook.com', 'fb.com', 'fbcdn.net', 'messenger.com', 'meta.com', 'm.me', 'fbsbx.com'],
+    correctUrl: 'https://www.facebook.com',
+    category: SOFTWARE_CATEGORIES.IM_SOCIAL,
+    keywords: ['facebook', 'Facebook', '脸书', 'messenger'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Instagram',
+    officialDomains: ['instagram.com', 'cdninstagram.com', 'ig.me'],
+    correctUrl: 'https://www.instagram.com',
+    category: SOFTWARE_CATEGORIES.IM_SOCIAL,
+    keywords: ['instagram', 'Instagram'],
+    isChineseBrand: false
+  },
+  {
+    name: 'WhatsApp',
+    officialDomains: ['whatsapp.com', 'whatsapp.net', 'wa.me', 'whatsappbrand.com'],
+    correctUrl: 'https://www.whatsapp.com',
+    category: SOFTWARE_CATEGORIES.IM_SOCIAL,
+    keywords: ['whatsapp', 'WhatsApp'],
+    isChineseBrand: false
+  },
+  {
+    name: 'X（推特）',
+    officialDomains: ['x.com', 'twitter.com', 't.co', 'twimg.com'],
+    correctUrl: 'https://x.com',
+    category: SOFTWARE_CATEGORIES.IM_SOCIAL,
+    keywords: ['twitter', 'Twitter', '推特'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Telegram',
+    officialDomains: ['telegram.org', 'telegram.me', 't.me', 'telegra.ph', 'telesco.pe', 'cdn-telegram.org'],
+    correctUrl: 'https://telegram.org',
+    category: SOFTWARE_CATEGORIES.IM_SOCIAL,
+    keywords: ['telegram', 'Telegram', '电报'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Discord',
+    officialDomains: ['discord.com', 'discord.gg', 'discordapp.com', 'discordapp.net', 'discordcdn.com', 'discordstatus.com'],
+    correctUrl: 'https://discord.com',
+    category: SOFTWARE_CATEGORIES.IM_SOCIAL,
+    keywords: ['discord', 'Discord'],
+    isChineseBrand: false
+  },
+  {
+    name: 'LinkedIn',
+    officialDomains: ['linkedin.com', 'lnkd.in', 'licdn.com', 'linkedin.cn'],
+    correctUrl: 'https://www.linkedin.com',
+    category: SOFTWARE_CATEGORIES.IM_SOCIAL,
+    keywords: ['linkedin', 'LinkedIn', '领英'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Reddit',
+    officialDomains: ['reddit.com', 'redd.it', 'redditstatic.com', 'redditmedia.com', 'redditinc.com'],
+    correctUrl: 'https://www.reddit.com',
+    category: SOFTWARE_CATEGORIES.IM_SOCIAL,
+    keywords: ['reddit', 'Reddit'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Slack',
+    officialDomains: ['slack.com', 'slack-edge.com', 'slack-msgs.com', 'slack-files.com', 'slackb.com'],
+    correctUrl: 'https://slack.com',
+    category: SOFTWARE_CATEGORIES.IM_SOCIAL,
+    keywords: ['slack', 'Slack'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Zoom',
+    officialDomains: ['zoom.us', 'zoom.com', 'zoomgov.com', 'zoomcdn.com'],
+    correctUrl: 'https://zoom.us',
+    category: SOFTWARE_CATEGORIES.IM_SOCIAL,
+    keywords: ['zoom', 'Zoom'],
+    isChineseBrand: false
+  },
+  {
+    name: '微博',
+    officialDomains: ['weibo.com', 'weibo.cn', 'sina.com.cn', 'sina.com', 'sinaimg.cn', 'weibocdn.com'],
+    correctUrl: 'https://weibo.com',
+    category: SOFTWARE_CATEGORIES.IM_SOCIAL,
+    keywords: ['微博', 'weibo', '新浪微博', 'sina'],
+    isChineseBrand: true
+  },
 // ========== 输入法 ==========
   {
     name: '搜狗输入法',
@@ -409,6 +497,51 @@ const DOMAIN_DATABASE = [
     keywords: ['UU远程', 'uu远程', '网易uu', '网易uu远程'],
     isChineseBrand: true
   },
+  {
+    name: '微软',
+    officialDomains: [
+      'microsoft.com', 'microsoftonline.com', 'microsoft365.com', 'microsoftstore.com',
+      'office.com', 'office365.com', 'live.com', 'outlook.com', 'hotmail.com',
+      'windows.com', 'windowsupdate.com', 'bing.com', 'azure.com', 'azurewebsites.net',
+      'sharepoint.com', 'onedrive.com', 'visualstudio.com', 'xbox.com', 'skype.com'
+    ],
+    correctUrl: 'https://www.microsoft.com',
+    category: SOFTWARE_CATEGORIES.OFFICE,
+    keywords: ['microsoft', 'Microsoft', '微软'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Adobe',
+    officialDomains: ['adobe.com', 'adobe.io', 'adobedtm.com', 'macromedia.com', 'typekit.com'],
+    correctUrl: 'https://www.adobe.com',
+    category: SOFTWARE_CATEGORIES.OFFICE,
+    keywords: ['adobe', 'Adobe', '奥多比'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Notion',
+    officialDomains: ['notion.so', 'notion.com', 'notion.site', 'notionusercontent.com'],
+    correctUrl: 'https://www.notion.so',
+    category: SOFTWARE_CATEGORIES.OFFICE,
+    keywords: ['notion', 'Notion'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Figma',
+    officialDomains: ['figma.com', 'figmafiles.com', 'figmausercontent.com'],
+    correctUrl: 'https://www.figma.com',
+    category: SOFTWARE_CATEGORIES.OFFICE,
+    keywords: ['figma', 'Figma'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Canva',
+    officialDomains: ['canva.com', 'canva.cn', 'canvausercontent.com'],
+    correctUrl: 'https://www.canva.com',
+    category: SOFTWARE_CATEGORIES.OFFICE,
+    keywords: ['canva', 'Canva', '可画'],
+    isChineseBrand: false
+  },
 // ========== 视频网站 ==========
   {
     name: '腾讯视频',
@@ -469,6 +602,54 @@ const DOMAIN_DATABASE = [
     keywords: ['搜狐视频', 'sohu视频', '搜狐', 'sohu'],
     isChineseBrand: true
   },
+  {
+    name: 'YouTube',
+    officialDomains: ['youtube.com', 'youtu.be', 'ytimg.com', 'youtube-nocookie.com', 'youtubekids.com'],
+    correctUrl: 'https://www.youtube.com',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['youtube', 'YouTube', '油管'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Netflix',
+    officialDomains: ['netflix.com', 'netflix.net', 'nflximg.net', 'nflxvideo.net', 'nflxso.net'],
+    correctUrl: 'https://www.netflix.com',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['netflix', 'Netflix', '奈飞'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Twitch',
+    officialDomains: ['twitch.tv', 'ttvnw.net', 'twitchcdn.net', 'jtvnw.net'],
+    correctUrl: 'https://www.twitch.tv',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['twitch', 'Twitch'],
+    isChineseBrand: false
+  },
+  {
+    name: 'TikTok',
+    officialDomains: ['tiktok.com', 'tiktokcdn.com', 'tiktokv.com', 'ttwstatic.com', 'byteoversea.com'],
+    correctUrl: 'https://www.tiktok.com',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['tiktok', 'TikTok'],
+    isChineseBrand: false
+  },
+  {
+    name: '抖音',
+    officialDomains: ['douyin.com', 'iesdouyin.com', 'douyincdn.com', 'douyinpic.com', 'douyinstatic.com'],
+    correctUrl: 'https://www.douyin.com',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['抖音', 'douyin'],
+    isChineseBrand: true
+  },
+  {
+    name: '快手',
+    officialDomains: ['kuaishou.com', 'gifshow.com', 'kwai.com', 'kwaicdn.com'],
+    correctUrl: 'https://www.kuaishou.com',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['快手', 'kuaishou', 'kwai'],
+    isChineseBrand: true
+  },
 // ========== 音乐软件 ==========
   {
     name: '网易云音乐',
@@ -525,6 +706,14 @@ const DOMAIN_DATABASE = [
     correctUrl: 'https://music.apple.com',
     category: SOFTWARE_CATEGORIES.MUSIC,
     keywords: ['苹果音乐', 'apple music', 'Apple Music'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Spotify',
+    officialDomains: ['spotify.com', 'scdn.co', 'spotifycdn.com', 'spotify.link'],
+    correctUrl: 'https://www.spotify.com',
+    category: SOFTWARE_CATEGORIES.MUSIC,
+    keywords: ['spotify', 'Spotify'],
     isChineseBrand: false
   },
 // ========== 云存储/网盘 ==========
@@ -584,6 +773,14 @@ const DOMAIN_DATABASE = [
     category: SOFTWARE_CATEGORIES.CLOUD_STORAGE,
     keywords: ['迅雷云盘', '迅雷网盘', '迅雷云'],
     isChineseBrand: true
+  },
+  {
+    name: 'Dropbox',
+    officialDomains: ['dropbox.com', 'dropboxusercontent.com', 'dropboxstatic.com', 'dropboxapi.com', 'db.tt'],
+    correctUrl: 'https://www.dropbox.com',
+    category: SOFTWARE_CATEGORIES.CLOUD_STORAGE,
+    keywords: ['dropbox', 'Dropbox'],
+    isChineseBrand: false
   },
 // ========== AI Chat ==========
   {
@@ -790,6 +987,46 @@ const DOMAIN_DATABASE = [
     keywords: ['雷神', 'thunderobot', '雷神商城', '雷神笔记本', '雷神电脑'],
     isChineseBrand: true
   },
+  {
+    name: '亚马逊',
+    officialDomains: ['amazon.com', 'amazon.cn', 'amazonaws.com', 'media-amazon.com', 'amazonpay.com', 'amazonpay.cn', 'a2z.com', 'audible.com'],
+    correctUrl: 'https://www.amazon.com',
+    category: SOFTWARE_CATEGORIES.E_COMMERCE,
+    keywords: ['amazon', 'Amazon', '亚马逊'],
+    isChineseBrand: false
+  },
+  {
+    name: 'eBay',
+    officialDomains: ['ebay.com', 'ebayimg.com', 'ebaystatic.com', 'ebayinc.com', 'ebay.cn'],
+    correctUrl: 'https://www.ebay.com',
+    category: SOFTWARE_CATEGORIES.E_COMMERCE,
+    keywords: ['ebay', 'eBay'],
+    isChineseBrand: false
+  },
+  {
+    name: '速卖通',
+    officialDomains: ['aliexpress.com', 'aliexpress.ru', 'alibaba.com', '1688.com', 'alicdn.com'],
+    correctUrl: 'https://www.aliexpress.com',
+    category: SOFTWARE_CATEGORIES.E_COMMERCE,
+    keywords: ['aliexpress', '速卖通', 'alibaba', '阿里巴巴', '1688'],
+    isChineseBrand: true
+  },
+  {
+    name: '唯品会',
+    officialDomains: ['vip.com', 'vipstatic.com', 'vipshop.com'],
+    correctUrl: 'https://www.vip.com',
+    category: SOFTWARE_CATEGORIES.E_COMMERCE,
+    keywords: ['唯品会', 'vipshop'],
+    isChineseBrand: true
+  },
+  {
+    name: '小红书',
+    officialDomains: ['xiaohongshu.com', 'xhscdn.com', 'xhslink.com'],
+    correctUrl: 'https://www.xiaohongshu.com',
+    category: SOFTWARE_CATEGORIES.E_COMMERCE,
+    keywords: ['小红书', 'xiaohongshu', 'rednote'],
+    isChineseBrand: true
+  },
 // ========== 地图/出行 ==========
   {
     name: '百度地图',
@@ -822,6 +1059,30 @@ const DOMAIN_DATABASE = [
     category: SOFTWARE_CATEGORIES.MAP_TRAVEL,
     keywords: ['腾讯地图', 'qq地图'],
     isChineseBrand: true
+  },
+  {
+    name: '铁路12306',
+    officialDomains: ['12306.cn', '12306.com'],
+    correctUrl: 'https://www.12306.cn',
+    category: SOFTWARE_CATEGORIES.MAP_TRAVEL,
+    keywords: ['12306', '铁路12306'],
+    isChineseBrand: true
+  },
+  {
+    name: '携程',
+    officialDomains: ['ctrip.com', 'trip.com', 'tripcdn.com'],
+    correctUrl: 'https://www.ctrip.com',
+    category: SOFTWARE_CATEGORIES.MAP_TRAVEL,
+    keywords: ['携程', 'ctrip'],
+    isChineseBrand: true
+  },
+  {
+    name: 'Airbnb',
+    officialDomains: ['airbnb.com', 'airbnb.cn', 'airbnb.com.cn', 'muscache.com'],
+    correctUrl: 'https://www.airbnb.com',
+    category: SOFTWARE_CATEGORIES.MAP_TRAVEL,
+    keywords: ['airbnb', 'Airbnb', '爱彼迎'],
+    isChineseBrand: false
   },
 // ========== 支付 ==========
   {
@@ -949,6 +1210,94 @@ const DOMAIN_DATABASE = [
     category: SOFTWARE_CATEGORIES.DEVELOPER,
     keywords: ['cc Switch', 'cc switch'],
     isChineseBrand: true
+  },
+  {
+    name: 'PayPal',
+    officialDomains: ['paypal.com', 'paypal.me', 'paypalobjects.com', 'paypal.cn', 'xoom.com'],
+    correctUrl: 'https://www.paypal.com',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['paypal', 'PayPal', '贝宝'],
+    isChineseBrand: false
+  },
+  {
+    name: '云闪付',
+    officialDomains: ['unionpay.com', 'unionpayintl.com', '95516.com', 'cloudquickpass.com'],
+    correctUrl: 'https://www.unionpay.com',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['银联', 'unionpay', '云闪付', 'quickpass'],
+    isChineseBrand: true
+  },
+  {
+    name: '中国工商银行',
+    officialDomains: ['icbc.com.cn', 'icbc.com', 'icbc-ltd.com'],
+    correctUrl: 'https://www.icbc.com.cn',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['工商银行', 'icbc', '工行'],
+    isChineseBrand: true
+  },
+  {
+    name: '中国建设银行',
+    officialDomains: ['ccb.com', 'ccb.com.cn'],
+    correctUrl: 'https://www.ccb.com',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['建设银行', 'ccb', '建行'],
+    isChineseBrand: true
+  },
+  {
+    name: '中国农业银行',
+    officialDomains: ['abchina.com', 'abchina.com.cn'],
+    correctUrl: 'https://www.abchina.com',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['农业银行', 'abchina', '农行'],
+    isChineseBrand: true
+  },
+  {
+    name: '中国银行',
+    officialDomains: ['boc.cn', 'bankofchina.com', 'boc.com'],
+    correctUrl: 'https://www.boc.cn',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['中国银行', 'bankofchina', '中行'],
+    isChineseBrand: true
+  },
+  {
+    name: '招商银行',
+    officialDomains: ['cmbchina.com', 'cmbchina.com.cn'],
+    correctUrl: 'https://www.cmbchina.com',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['招商银行', 'cmbchina', '招行'],
+    isChineseBrand: true
+  },
+  {
+    name: 'Stack Overflow',
+    officialDomains: ['stackoverflow.com', 'stackexchange.com', 'sstatic.net', 'serverfault.com', 'superuser.com', 'askubuntu.com'],
+    correctUrl: 'https://stackoverflow.com',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['stackoverflow', 'Stack Overflow', 'stackexchange'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Docker',
+    officialDomains: ['docker.com', 'docker.io', 'dockerhub.com'],
+    correctUrl: 'https://www.docker.com',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['docker', 'Docker'],
+    isChineseBrand: false
+  },
+  {
+    name: 'JetBrains',
+    officialDomains: ['jetbrains.com', 'jetbrains.net'],
+    correctUrl: 'https://www.jetbrains.com',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['jetbrains', 'JetBrains'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Postman',
+    officialDomains: ['postman.com', 'postman.co', 'getpostman.com'],
+    correctUrl: 'https://www.postman.com',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['postman', 'Postman'],
+    isChineseBrand: false
   },
 // ========== 系统工具 ==========
   {
@@ -1099,6 +1448,38 @@ const DOMAIN_DATABASE = [
     keywords: ['网易游戏', 'netease游戏', 'Netease Games'],
     isChineseBrand: true
   },
+  {
+    name: 'Epic Games',
+    officialDomains: ['epicgames.com', 'epicgames.dev', 'fortnite.com', 'unrealengine.com', 'easyanticheat.net'],
+    correctUrl: 'https://www.epicgames.com',
+    category: SOFTWARE_CATEGORIES.GAME,
+    keywords: ['epicgames', 'Epic Games', 'unrealengine', 'fortnite'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Roblox',
+    officialDomains: ['roblox.com', 'rbxcdn.com', 'robloxlabs.com', 'roblox.cn'],
+    correctUrl: 'https://www.roblox.com',
+    category: SOFTWARE_CATEGORIES.GAME,
+    keywords: ['roblox', 'Roblox', '罗布乐思'],
+    isChineseBrand: false
+  },
+  {
+    name: 'PlayStation',
+    officialDomains: ['playstation.com', 'playstation.net', 'sony.com', 'sony.net', 'sonyentertainmentnetwork.com'],
+    correctUrl: 'https://www.playstation.com',
+    category: SOFTWARE_CATEGORIES.GAME,
+    keywords: ['playstation', 'PlayStation', 'psn', '索尼'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Nintendo',
+    officialDomains: ['nintendo.com', 'nintendo.net', 'nintendo.co.jp', 'nintendoswitch.com'],
+    correctUrl: 'https://www.nintendo.com',
+    category: SOFTWARE_CATEGORIES.GAME,
+    keywords: ['nintendo', 'Nintendo', '任天堂'],
+    isChineseBrand: false
+  },
 // ========== 游戏加速器 ==========
   {
     name: '网易UU加速器',
@@ -1245,6 +1626,22 @@ const DOMAIN_DATABASE = [
     category: SOFTWARE_CATEGORIES.NEWS_INFO,
     keywords: ['msn', 'MSN'],
     isChineseBrand: false
+  },
+  {
+    name: 'Wikipedia',
+    officialDomains: ['wikipedia.org', 'wikimedia.org', 'wikidata.org', 'wiktionary.org', 'wikimediafoundation.org'],
+    correctUrl: 'https://www.wikipedia.org',
+    category: SOFTWARE_CATEGORIES.NEWS_INFO,
+    keywords: ['wikipedia', 'Wikipedia', '维基百科', 'wikimedia'],
+    isChineseBrand: false
+  },
+  {
+    name: '豆瓣',
+    officialDomains: ['douban.com', 'doubanio.com', 'douban.fm'],
+    correctUrl: 'https://www.douban.com',
+    category: SOFTWARE_CATEGORIES.NEWS_INFO,
+    keywords: ['豆瓣', 'douban'],
+    isChineseBrand: true
   }
 ];
 
@@ -1321,7 +1718,7 @@ const strongKeywords = new Set();
  * 低特异性关键词（通用英文词）：不参与标签子串匹配，段匹配仅按 weak 计分。
  * 避免 slack-edge.com / kdocs-team.com / steam.com 等合法域名被判为仿冒。
  */
-const LOW_SPECIFICITY_KEYWORDS = new Set(['edge', 'steam', 'soul', 'clash']);
+const LOW_SPECIFICITY_KEYWORDS = new Set(['edge', 'steam', 'soul', 'clash', 'slack', 'zoom', 'notion', 'postman']);
 
 /**
  * 命名空间归属索引：品牌官方域名的注册域父级 → 品牌条目。

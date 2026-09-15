@@ -1320,6 +1320,7 @@ async function analyzePage(tabId, url, domain, pageMetrics, linkMetrics) {
         pageUrl: tabState.url || url,
         icpStrings: tabState.icpStrings || [],
         hasIcpGovLink: tabState.hasIcpGovLink || false,
+        textSignals: tabState.textSignals || null,   // 携带同步阶段中文信号，异步回填时保持一致
         impersonating: syncResult.breakdown.rule1.triggered || false,
         oldRule3: {
           score: rule3Result.score || 0,
@@ -1509,8 +1510,8 @@ async function _applyIcpUpdate(snapshot, icpApi) {
   }
 
   // 重新执行规则三（仅注入 API 结果，其余参数与同步阶段一致）
-  // 注意：同步阶段 _evaluateRule3 的 pageText 和 textSignals 均为 undefined，
-  // 此处保持一致以确保判定结果仅受 icpApi 参数影响。
+  // 注意：同步阶段 ctx 已传入 textSignals（见 analyzePage 的 ctx 构造），
+  // 此处必须带回同样的值，否则异步阶段会丢中文信号、导致二次判定与首屏不一致。
   const settings = await getSettings();
   setActiveSettings(settings);
   const newRule3 = ScoringEngine._evaluateRule3(
@@ -1518,7 +1519,7 @@ async function _applyIcpUpdate(snapshot, icpApi) {
     undefined,                       // pageText（同步阶段亦未传递）
     snapshot.icpStrings,
     snapshot.hasIcpGovLink,
-    undefined,                       // textSignals（同步阶段亦未传递）
+    snapshot.textSignals || tabState.textSignals || null,  // 修复：传回中文信号，而非 undefined
     icpApi,
     snapshot.impersonating
   );

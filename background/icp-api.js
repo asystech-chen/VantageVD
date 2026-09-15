@@ -90,12 +90,18 @@ async function writeCache(domain, result) {
 
 export class IcpApiClient {
   /**
-   * 按域名查询 ICP 备案信息。
+   * 按域名查询 ICP 备案信息（两段式：主域名优先 + 完整主机名兜底）。
    * @param {string} hostname - 完整主机名（如 www.baidu.com）
    * @param {Object} [opts] - 可选覆盖，如 { apihzId, apihzKey }
    * @returns {Promise<{ queried:boolean, hasIcp:boolean, icpNumber:?string, unitName:?string, service:?string, error:?string }>}
    *   - queried:true  表示 API 成功返回了结论（无论有无备案）
    *   - queried:false 表示所有源失败/超时/限流，调用方应回退页面文本扫描
+   *
+   * 查询策略（2026-09-16 起）：
+   *   1) 先按「主域名」查询：缓存命中率高、请求量低
+   *   2) 主域名无备案且完整主机名不同时，再用「完整主机名」兜底
+   *      （部分备案仅登记在具体子域名上，参见上游 PR #366）
+   * 缓存以实际查询目标为 key，两段结果互不覆盖。
    */
   static async query(hostname, opts = {}) {
     if (!hostname) return { queried: false, hasIcp: false, error: 'empty hostname' };
@@ -103,8 +109,29 @@ export class IcpApiClient {
     // 总开关：设置中关闭 API 核验时直接跳过（调用方回退页面文本扫描）
     if (opts.enabled === false) return { queried: false, hasIcp: false, error: 'api disabled' };
 
-    const domain = UrlUtils.getMainDomain(hostname) || hostname.toLowerCase();
+    const host = hostname.toLowerCase();
+    const mainDomain = UrlUtils.getMainDomain(host) || host;
 
+    // ── 第一段：主域名（缓存友好、请求量低）──
+    const primary = await IcpApiClient._queryOne(mainDomain, opts);
+    if (primary.hasIcp || host === mainDomain) return primary;
+
+    // ── 第二段：完整主机名兜底 ──
+    const fallback = await IcpApiClient._queryOne(host, opts);
+    if (fallback.hasIcp) return fallback;
+
+    // 兜底也失败（限流/超时）时，若主域名已有结论则保留主域名结论，
+    // 避免把「查询成功但无备案」误降级为「查询失败」而回退页面扫描
+    return primary.queried ? primary : fallback;
+  }
+
+  /**
+   * 单目标查询（内部）：按给定域名走多源备援 + 缓存 + 限流。
+   * @param {string} domain - 已规范化的查询目标（主域名或完整主机名，小写）
+   * @param {Object} opts
+   * @returns {Promise<{ queried:boolean, hasIcp:boolean, icpNumber:?string, unitName:?string, service:?string, error:?string }>}
+   */
+  static async _queryOne(domain, opts = {}) {
     // 命中缓存直接返回
     const cached = await readCache(domain);
     if (cached) return cached;
