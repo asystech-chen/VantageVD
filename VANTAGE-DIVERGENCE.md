@@ -108,3 +108,47 @@
 4. 移植后：`node --test tests/domain-database.test.mjs tests/extension-safety.test.mjs` + `npx eslint --max-warnings=0 .`
 5. 发版：**必须升 manifest version**（AMO 同版本不能重签；policies `install_url` 也靠版本号变化触发更新）
 6. 上线：签名 XPI → 覆盖 `asys/vantage/vd.xpi` → commit → push（详见官网记忆）
+
+## 7. 半分离规划（2026-09-16 桶哥拍板）
+
+**目标**：收窄与上游的定制接触面，把上游同步从「逐文件手工合并」降为「数据/配置层零冲突 + 逻辑层按清单核对」。
+
+**原则**：不硬分家 —— 上游的检测规则 / 品牌数据 / 误报修复是插件生命线，`upstream` 必须保持可拉可取。
+
+### 7.1 三层划分
+
+| 层 | 内容 | 目标形态 | 上游同步影响 |
+| --- | --- | --- | --- |
+| 数据层 | 品牌库 `background/domain-database.js` | 上游文件不动；我方增量独立成 `background/domain-database.vantage.js`，运行时合并 | 零冲突 |
+| 配置层 | 内置白名单 / 端点 / 常量开关 | 集中到 `utils/vantage-config.js`；上游 `constants.js` 只保留引用 | 零冲突（或单点） |
+| 逻辑层 | 分级计分、误报护栏、异步一致性、UI/主题 | 保留在原文件；靠 §4 固化清单核对 | 手工合并 + 清单验收 |
+
+### 7.2 数据层落地方案
+
+- 新建 `background/domain-database.vantage.js`：导出我方增量条目 + 需要覆盖的字段
+- `domain-database.js` 内**只保留一处**定制：构建索引前合并增量（一行 import + 一次 merge 调用）
+- 迁移内容：`a93aaa3` 新增的 49 条、`d7e2b52` 的品牌自有域名补全、`cc362f4` 的 `qianwen.com`
+- 验收：扩展 `tests/domain-database.test.mjs` 覆盖增量条目；上游更新品牌库后该文件 `git merge` 应无冲突
+
+### 7.3 配置层落地方案
+
+- 新建 `utils/vantage-config.js`：`VANTAGE_BUILTIN_WHITELIST`、端点覆盖（RDAP / DoH / 上报）、功能开关
+- 上游 `constants.js` 保持上游原样，仅保留一处指向 `vantage-config.js` 的引用
+- 验收：`git merge upstream/main` 时 `utils/constants.js` 无冲突
+
+### 7.4 实施时机与顺序
+
+1. **不专门重构** —— 下次移植上游时（B 类：全屏拦截页 / 白名单通配符 / 测试）顺带执行
+2. 顺序：**配置层（最简单） → 数据层 → 逻辑层清单化**
+3. 每步独立提交，保证可回退
+
+### 7.5 验收指标
+
+- 上游同步的冲突文件数持续下降（目标：数据层 / 配置层 0 冲突）
+- `bash scripts/vantage-divergence.sh` 输出中「我方修改文件数」下降
+- `node --test tests/domain-database.test.mjs tests/extension-safety.test.mjs` 全绿 + `npx eslint --max-warnings=0 .`
+
+### 7.6 风险与待定
+
+- 数据层「运行时合并」需明确：同名条目覆盖策略、`officialDomains` 重复处理、索引构建顺序
+- 可选路线：把通用改进（品牌库补全 / 误报修复）**反哺上游提 PR**，上游合并后我方自动受益，长期维护成本更低 —— 是否走此路线待桶哥决定
