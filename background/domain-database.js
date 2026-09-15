@@ -367,6 +367,30 @@ const DOMAIN_DATABASE = [
     keywords: ['微博', 'weibo', '新浪微博', 'sina'],
     isChineseBrand: true
   },
+  {
+    name: '中国移动',
+    officialDomains: ['10086.cn', 'chinamobile.com', 'chinamobileltd.com'],
+    correctUrl: 'https://www.10086.cn',
+    category: SOFTWARE_CATEGORIES.IM_SOCIAL,
+    keywords: ['中国移动', '10086', 'chinamobile'],
+    isChineseBrand: true
+  },
+  {
+    name: '中国联通',
+    officialDomains: ['chinaunicom.com.cn', '10010.com', 'chinaunicom.com'],
+    correctUrl: 'https://www.chinaunicom.com.cn',
+    category: SOFTWARE_CATEGORIES.IM_SOCIAL,
+    keywords: ['中国联通', '10010', 'chinaunicom'],
+    isChineseBrand: true
+  },
+  {
+    name: '中国电信',
+    officialDomains: ['chinatelecom.com.cn', '189.cn', 'chinatelecom-h.com'],
+    correctUrl: 'https://www.chinatelecom.com.cn',
+    category: SOFTWARE_CATEGORIES.IM_SOCIAL,
+    keywords: ['中国电信', 'chinatelecom'],
+    isChineseBrand: true
+  },
 // ========== 输入法 ==========
   {
     name: '搜狗输入法',
@@ -1027,6 +1051,30 @@ const DOMAIN_DATABASE = [
     keywords: ['小红书', 'xiaohongshu', 'rednote'],
     isChineseBrand: true
   },
+  {
+    name: '饿了么',
+    officialDomains: ['ele.me', 'elemecdn.com'],
+    correctUrl: 'https://www.ele.me',
+    category: SOFTWARE_CATEGORIES.E_COMMERCE,
+    keywords: ['饿了么', 'eleme', 'ele.me'],
+    isChineseBrand: true
+  },
+  {
+    name: '当当',
+    officialDomains: ['dangdang.com', 'dangdang.com.cn'],
+    correctUrl: 'https://www.dangdang.com',
+    category: SOFTWARE_CATEGORIES.E_COMMERCE,
+    keywords: ['当当', 'dangdang'],
+    isChineseBrand: true
+  },
+  {
+    name: '得物',
+    officialDomains: ['dewu.com', 'poizon.com'],
+    correctUrl: 'https://www.dewu.com',
+    category: SOFTWARE_CATEGORIES.E_COMMERCE,
+    keywords: ['得物', 'dewu', 'poizon'],
+    isChineseBrand: true
+  },
 // ========== 地图/出行 ==========
   {
     name: '百度地图',
@@ -1083,6 +1131,38 @@ const DOMAIN_DATABASE = [
     category: SOFTWARE_CATEGORIES.MAP_TRAVEL,
     keywords: ['airbnb', 'Airbnb', '爱彼迎'],
     isChineseBrand: false
+  },
+  {
+    name: '去哪儿',
+    officialDomains: ['qunar.com', 'qunarzz.com'],
+    correctUrl: 'https://www.qunar.com',
+    category: SOFTWARE_CATEGORIES.MAP_TRAVEL,
+    keywords: ['去哪儿', 'qunar'],
+    isChineseBrand: true
+  },
+  {
+    name: '同程旅行',
+    officialDomains: ['ly.com', '17u.cn'],
+    correctUrl: 'https://www.ly.com',
+    category: SOFTWARE_CATEGORIES.MAP_TRAVEL,
+    keywords: ['同程旅行', '同程', 'ly.com'],
+    isChineseBrand: true
+  },
+  {
+    name: '飞猪',
+    officialDomains: ['fliggy.com', 'fliggy.com.cn'],
+    correctUrl: 'https://www.fliggy.com',
+    category: SOFTWARE_CATEGORIES.MAP_TRAVEL,
+    keywords: ['飞猪', 'fliggy'],
+    isChineseBrand: true
+  },
+  {
+    name: '顺丰速运',
+    officialDomains: ['sf-express.com', 'sf-express.com.cn'],
+    correctUrl: 'https://www.sf-express.com',
+    category: SOFTWARE_CATEGORIES.MAP_TRAVEL,
+    keywords: ['顺丰', 'sf-express'],
+    isChineseBrand: true
   },
 // ========== 支付 ==========
   {
@@ -1299,6 +1379,182 @@ const DOMAIN_DATABASE = [
     keywords: ['postman', 'Postman'],
     isChineseBrand: false
   },
+  {
+    name: '交通银行',
+    officialDomains: ['bankcomm.com', 'bankcomm.com.cn'],
+    correctUrl: 'https://www.bankcomm.com',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['交通银行', 'bankcomm', '交行'],
+    isChineseBrand: true
+  },
+  {
+    name: '中国邮政储蓄银行',
+    officialDomains: ['psbc.com', 'psbc.com.cn'],
+    correctUrl: 'https://www.psbc.com',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['邮政储蓄', 'psbc', '邮储银行'],
+    isChineseBrand: true
+  },
+  {
+    name: '中信银行',
+    officialDomains: ['citicbank.com', 'citicbank.com.cn'],
+    correctUrl: 'https://www.citicbank.com',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['中信银行', 'citicbank'],
+    isChineseBrand: true
+  },
+  {
+    name: '浦发银行',
+    officialDomains: ['spdb.com.cn', 'spdb.com'],
+    correctUrl: 'https://www.spdb.com.cn',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['浦发银行', 'spdb', '浦发'],
+    isChineseBrand: true
+  },
+  {
+    name: '民生银行',
+    officialDomains: ['cmbc.com.cn'],
+    correctUrl: 'https://www.cmbc.com.cn',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['民生银行', 'cmbc'],
+    isChineseBrand: true
+  },
+  {
+    name: '兴业银行',
+    officialDomains: ['cib.com.cn'],
+    correctUrl: 'https://www.cib.com.cn',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['兴业银行', 'cib'],
+    isChineseBrand: true
+  },
+  {
+    name: '光大银行',
+    officialDomains: ['cebbank.com'],
+    correctUrl: 'https://www.cebbank.com',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['光大银行', 'cebbank'],
+    isChineseBrand: true
+  },
+  {
+    name: '中国平安',
+    officialDomains: ['pingan.com', 'pingan.com.cn', 'pingan.cn'],
+    correctUrl: 'https://www.pingan.com',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['中国平安', 'pingan'],
+    isChineseBrand: true
+  },
+  {
+    name: '中国人寿',
+    officialDomains: ['chinalife.com.cn', 'e-chinalife.com'],
+    correctUrl: 'https://www.e-chinalife.com',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['中国人寿', 'chinalife'],
+    isChineseBrand: true
+  },
+  {
+    name: 'Stripe',
+    officialDomains: ['stripe.com', 'stripe.network'],
+    correctUrl: 'https://stripe.com',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['stripe', 'Stripe'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Payoneer',
+    officialDomains: ['payoneer.com', 'payoneer.com.cn'],
+    correctUrl: 'https://www.payoneer.com',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['payoneer', 'Payoneer', '派安盈'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Wise',
+    officialDomains: ['wise.com', 'transferwise.com'],
+    correctUrl: 'https://wise.com',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['wise', 'Wise', 'transferwise'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Binance',
+    officialDomains: ['binance.com', 'binance.us', 'bnbstatic.com'],
+    correctUrl: 'https://www.binance.com',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['binance', 'Binance', '币安'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Coinbase',
+    officialDomains: ['coinbase.com'],
+    correctUrl: 'https://www.coinbase.com',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['coinbase', 'Coinbase'],
+    isChineseBrand: false
+  },
+  {
+    name: 'MetaMask',
+    officialDomains: ['metamask.io', 'metamask.com'],
+    correctUrl: 'https://metamask.io',
+    category: SOFTWARE_CATEGORIES.PAYMENT,
+    keywords: ['metamask', 'MetaMask'],
+    isChineseBrand: false
+  },
+  {
+    name: 'NVIDIA',
+    officialDomains: ['nvidia.com', 'nvidia.cn', 'nvidiagrid.net'],
+    correctUrl: 'https://www.nvidia.com',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['nvidia', 'NVIDIA', '英伟达'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Intel',
+    officialDomains: ['intel.com', 'intel.cn'],
+    correctUrl: 'https://www.intel.com',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['intel', 'Intel', '英特尔'],
+    isChineseBrand: false
+  },
+  {
+    name: 'AMD',
+    officialDomains: ['amd.com'],
+    correctUrl: 'https://www.amd.com',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['amd', 'AMD', '超威半导体'],
+    isChineseBrand: false
+  },
+  {
+    name: 'IBM',
+    officialDomains: ['ibm.com', 'ibm.cn'],
+    correctUrl: 'https://www.ibm.com',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['ibm', 'IBM'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Oracle',
+    officialDomains: ['oracle.com', 'oraclecloud.com'],
+    correctUrl: 'https://www.oracle.com',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['oracle', 'Oracle', '甲骨文'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Salesforce',
+    officialDomains: ['salesforce.com', 'force.com', 'salesforceliveagent.com'],
+    correctUrl: 'https://www.salesforce.com',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['salesforce', 'Salesforce'],
+    isChineseBrand: false
+  },
+  {
+    name: '华为',
+    officialDomains: ['huawei.com', 'huawei.com.cn', 'hicloud.com'],
+    correctUrl: 'https://www.huawei.com',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['huawei', 'HUAWEI', '华为'],
+    isChineseBrand: true
+  },
 // ========== 系统工具 ==========
   {
     name: '驱动精灵',
@@ -1479,6 +1735,38 @@ const DOMAIN_DATABASE = [
     category: SOFTWARE_CATEGORIES.GAME,
     keywords: ['nintendo', 'Nintendo', '任天堂'],
     isChineseBrand: false
+  },
+  {
+    name: '国家电网',
+    officialDomains: ['sgcc.com.cn', 'sgcc.com'],
+    correctUrl: 'https://www.sgcc.com.cn',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['国家电网', 'sgcc'],
+    isChineseBrand: true
+  },
+  {
+    name: '三星',
+    officialDomains: ['samsung.com', 'samsung.com.cn', 'samsungapps.com'],
+    correctUrl: 'https://www.samsung.com',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['samsung', 'Samsung', '三星'],
+    isChineseBrand: false
+  },
+  {
+    name: '特斯拉',
+    officialDomains: ['tesla.com', 'tesla.cn', 'teslamotors.com'],
+    correctUrl: 'https://www.tesla.com',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['tesla', 'Tesla', '特斯拉'],
+    isChineseBrand: false
+  },
+  {
+    name: '米哈游',
+    officialDomains: ['mihoyo.com', 'hoyoverse.com', 'hoyolab.com'],
+    correctUrl: 'https://www.mihoyo.com',
+    category: SOFTWARE_CATEGORIES.GAME,
+    keywords: ['米哈游', 'mihoyo', 'hoyoverse', '原神'],
+    isChineseBrand: true
   },
 // ========== 游戏加速器 ==========
   {
