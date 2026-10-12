@@ -527,11 +527,26 @@ const DOMAIN_DATABASE = [
       'microsoft.com', 'microsoftonline.com', 'microsoft365.com', 'microsoftstore.com',
       'office.com', 'office365.com', 'live.com', 'outlook.com', 'hotmail.com',
       'windows.com', 'windowsupdate.com', 'bing.com', 'azure.com', 'azurewebsites.net',
-      'sharepoint.com', 'onedrive.com', 'visualstudio.com', 'xbox.com', 'skype.com'
+      'sharepoint.com', 'onedrive.com', 'visualstudio.com', 'xbox.com', 'skype.com',
+      'nuget.org'
     ],
     correctUrl: 'https://www.microsoft.com',
     category: SOFTWARE_CATEGORIES.OFFICE,
-    keywords: ['microsoft', 'Microsoft', '微软'],
+    // 2026-10-12：补产品级关键词（微软产品假官网极多）。
+    // 注：4-5 字符的词（word/excel/teams/xbox/bing/azure/skype/nuget/msdn/win11）
+    // 按现有分级只算 weak，仅在注册域/连字符段完全等同时命中；
+    // 要它们强判需单列「短品牌词规则」（待桶哥定）。
+    keywords: [
+      'microsoft', 'Microsoft', '微软',
+      'windows', 'Windows', 'windows10', 'windows11', 'win11',
+      'office', 'Office', 'word', 'excel', 'powerpoint', 'Office 365', 'office365',
+      'teams', 'Microsoft Teams', 'msteams', 'microsoftteams',
+      'onedrive', 'OneDrive', 'sharepoint', 'SharePoint',
+      'outlook', 'Outlook', 'hotmail', 'Hotmail',
+      'xbox', 'Xbox', 'skype', 'Skype', 'bing', 'Bing', 'azure', 'Azure',
+      'visualstudio', 'Visual Studio', 'vscode', 'VS Code',
+      'nuget', 'NuGet', 'msdn', 'MSDN'
+    ],
     isChineseBrand: false
   },
   {
