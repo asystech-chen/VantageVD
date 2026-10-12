@@ -394,7 +394,7 @@ const DOMAIN_DATABASE = [
 // ========== 输入法 ==========
   {
     name: '搜狗输入法',
-    officialDomains: ['pinyin.sogou.com', 'shurufa.sogou.com'],
+    officialDomains: ['sogou.com', 'pinyin.sogou.com', 'shurufa.sogou.com'],
     correctUrl: 'https://pinyin.sogou.com',
     category: SOFTWARE_CATEGORIES.INPUT_METHOD,
     keywords: ['搜狗输入法', '搜狗拼音', 'sogou输入法', '搜狗拼音输入法', '搜狗', 'sogou'],
@@ -410,7 +410,7 @@ const DOMAIN_DATABASE = [
   },
   {
     name: '讯飞输入法',
-    officialDomains: ['srf.xunfei.cn'],
+    officialDomains: ['iflytek.com', 'srf.xunfei.cn'],
     correctUrl: 'https://srf.xunfei.cn',
     category: SOFTWARE_CATEGORIES.INPUT_METHOD,
     keywords: ['讯飞输入法', '讯飞', 'xunfei', '讯飞语音输入法'],
@@ -784,7 +784,7 @@ const DOMAIN_DATABASE = [
   },
   {
     name: '夸克网盘',
-    officialDomains: ['pan.quark.cn'],
+    officialDomains: ['quark.cn', 'pan.quark.cn'],
     correctUrl: 'https://pan.quark.cn',
     category: SOFTWARE_CATEGORIES.CLOUD_STORAGE,
     keywords: ['夸克网盘', '夸克', '夸克云盘'],
@@ -1930,6 +1930,469 @@ const DOMAIN_DATABASE = [
     category: SOFTWARE_CATEGORIES.NEWS_INFO,
     keywords: ['豆瓣', 'douban'],
     isChineseBrand: true
+  },
+// ========== 影音/图形工具（补充，2026-10-12 假官网专项） ==========
+  {
+    name: 'VLC',
+    officialDomains: ['videolan.org'],
+    correctUrl: 'https://www.videolan.org',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['VLC', 'vlc', 'videolan'],
+    isChineseBrand: false
+  },
+  {
+    name: 'PotPlayer',
+    officialDomains: ['potplayer.daum.net'],
+    correctUrl: 'https://potplayer.daum.net',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['PotPlayer', 'potplayer'],
+    isChineseBrand: false
+  },
+  {
+    name: 'KMPlayer',
+    officialDomains: ['kmplayer.com'],
+    correctUrl: 'https://www.kmplayer.com',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['KMPlayer', 'kmplayer'],
+    isChineseBrand: false
+  },
+  {
+    name: 'mpv',
+    officialDomains: ['mpv.io'],
+    correctUrl: 'https://mpv.io',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['mpv'],
+    isChineseBrand: false
+  },
+  {
+    name: 'foobar2000',
+    officialDomains: ['foobar2000.org'],
+    correctUrl: 'https://www.foobar2000.org',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['foobar2000'],
+    isChineseBrand: false
+  },
+  {
+    name: 'AIMP',
+    officialDomains: ['aimp.ru'],
+    correctUrl: 'https://www.aimp.ru',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['AIMP', 'aimp'],
+    isChineseBrand: false
+  },
+  {
+    name: 'OBS Studio',
+    officialDomains: ['obsproject.com'],
+    correctUrl: 'https://obsproject.com',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['OBS Studio', 'obsproject', 'obsstudio'],
+    isChineseBrand: false
+  },
+  {
+    name: 'DaVinci Resolve',
+    officialDomains: ['blackmagicdesign.com'],
+    correctUrl: 'https://www.blackmagicdesign.com',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['DaVinci Resolve', 'davinciresolve', 'blackmagicdesign'],
+    isChineseBrand: false
+  },
+  {
+    name: '格式工厂',
+    officialDomains: ['pcfreetime.com'],
+    correctUrl: 'https://www.pcfreetime.com',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['格式工厂', 'formatfactory', 'pcfreetime'],
+    isChineseBrand: true
+  },
+  {
+    name: '剪映',
+    officialDomains: ['capcut.com'],
+    correctUrl: 'https://www.capcut.com',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['剪映', 'CapCut', 'capcut'],
+    isChineseBrand: true
+  },
+  {
+    name: 'Audacity',
+    officialDomains: ['audacityteam.org'],
+    correctUrl: 'https://www.audacityteam.org',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['Audacity', 'audacity'],
+    isChineseBrand: false
+  },
+  {
+    name: 'GIMP',
+    officialDomains: ['gimp.org'],
+    correctUrl: 'https://www.gimp.org',
+    category: SOFTWARE_CATEGORIES.VIDEO,
+    keywords: ['GIMP', 'gimp'],
+    isChineseBrand: false
+  },
+// ========== 开发者工具（补充，2026-10-12 假官网专项） ==========
+  {
+    name: 'Git',
+    officialDomains: ['git-scm.com'],
+    correctUrl: 'https://git-scm.com',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['Git', 'git-scm', 'gitscm'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Node.js',
+    officialDomains: ['nodejs.org'],
+    correctUrl: 'https://nodejs.org',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['Node.js', 'nodejs'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Python',
+    officialDomains: ['python.org'],
+    correctUrl: 'https://www.python.org',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['Python', 'python'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Java',
+    officialDomains: ['java.com'],
+    correctUrl: 'https://www.java.com',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['Java', 'java'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Sublime Text',
+    officialDomains: ['sublimetext.com'],
+    correctUrl: 'https://www.sublimetext.com',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['Sublime Text', 'sublimetext'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Vim',
+    officialDomains: ['vim.org'],
+    correctUrl: 'https://www.vim.org',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['Vim', 'vim'],
+    isChineseBrand: false
+  },
+  {
+    name: 'FileZilla',
+    officialDomains: ['filezilla-project.org'],
+    correctUrl: 'https://filezilla-project.org',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['FileZilla', 'filezilla'],
+    isChineseBrand: false
+  },
+  {
+    name: 'WinSCP',
+    officialDomains: ['winscp.net'],
+    correctUrl: 'https://winscp.net',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['WinSCP', 'winscp'],
+    isChineseBrand: false
+  },
+  {
+    name: 'PuTTY',
+    officialDomains: ['putty.org'],
+    correctUrl: 'https://www.putty.org',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['PuTTY', 'putty'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Xshell',
+    officialDomains: ['netsarang.com'],
+    correctUrl: 'https://www.netsarang.com',
+    category: SOFTWARE_CATEGORIES.DEVELOPER,
+    keywords: ['Xshell', 'xshell', 'netsarang'],
+    isChineseBrand: false
+  },
+// ========== 系统工具/硬件检测（补充，2026-10-12 假官网专项） ==========
+  {
+    name: 'Rufus',
+    officialDomains: ['rufus.ie'],
+    correctUrl: 'https://rufus.ie',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['Rufus', 'rufus'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Ventoy',
+    officialDomains: ['ventoy.net'],
+    correctUrl: 'https://www.ventoy.net',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['Ventoy', 'ventoy'],
+    isChineseBrand: false
+  },
+  {
+    name: 'balenaEtcher',
+    officialDomains: ['balena.io'],
+    correctUrl: 'https://etcher.balena.io',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['balenaEtcher', 'balenaetcher', 'balena'],
+    isChineseBrand: false
+  },
+  {
+    name: 'CCleaner',
+    officialDomains: ['ccleaner.com'],
+    correctUrl: 'https://www.ccleaner.com',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['CCleaner', 'ccleaner'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Geek Uninstaller',
+    officialDomains: ['geekuninstaller.com'],
+    correctUrl: 'https://geekuninstaller.com',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['Geek Uninstaller', 'geekuninstaller'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Revo Uninstaller',
+    officialDomains: ['revouninstaller.com'],
+    correctUrl: 'https://www.revouninstaller.com',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['Revo Uninstaller', 'revouninstaller'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Everything',
+    officialDomains: ['voidtools.com'],
+    correctUrl: 'https://www.voidtools.com',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['Everything', 'everything', 'voidtools'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Notepad3',
+    officialDomains: ['rizonesoft.com'],
+    correctUrl: 'https://www.rizonesoft.com',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['Notepad3', 'notepad3', 'rizonesoft'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Snipaste',
+    officialDomains: ['snipaste.com'],
+    correctUrl: 'https://www.snipaste.com',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['Snipaste', 'snipaste'],
+    isChineseBrand: false
+  },
+  {
+    name: 'RustDesk',
+    officialDomains: ['rustdesk.com'],
+    correctUrl: 'https://rustdesk.com',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['RustDesk', 'rustdesk'],
+    isChineseBrand: false
+  },
+  {
+    name: '2345',
+    officialDomains: ['2345.com'],
+    correctUrl: 'https://www.2345.com',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['2345', '2345.com'],
+    isChineseBrand: true
+  },
+  {
+    name: 'GPU-Z',
+    officialDomains: ['techpowerup.com'],
+    correctUrl: 'https://www.techpowerup.com',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['GPU-Z', 'gpuz', 'techpowerup'],
+    isChineseBrand: false
+  },
+  {
+    name: 'HWiNFO',
+    officialDomains: ['hwinfo.com'],
+    correctUrl: 'https://www.hwinfo.com',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['HWiNFO', 'hwinfo'],
+    isChineseBrand: false
+  },
+  {
+    name: 'AIDA64',
+    officialDomains: ['aida64.com'],
+    correctUrl: 'https://www.aida64.com',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['AIDA64', 'aida64'],
+    isChineseBrand: false
+  },
+  {
+    name: 'CrystalDiskInfo',
+    officialDomains: ['crystalmark.info'],
+    correctUrl: 'https://crystalmark.info',
+    category: SOFTWARE_CATEGORIES.SYSTEM_TOOL,
+    keywords: ['CrystalDiskInfo', 'crystaldiskinfo', 'crystalmark'],
+    isChineseBrand: false
+  },
+// ========== 安全软件（补充，2026-10-12 假官网专项） ==========
+  {
+    name: '卡巴斯基',
+    officialDomains: ['kaspersky.com'],
+    correctUrl: 'https://www.kaspersky.com',
+    category: SOFTWARE_CATEGORIES.SECURITY,
+    keywords: ['卡巴斯基', 'kaspersky'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Norton',
+    officialDomains: ['norton.com'],
+    correctUrl: 'https://www.norton.com',
+    category: SOFTWARE_CATEGORIES.SECURITY,
+    keywords: ['Norton', 'norton'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Avast',
+    officialDomains: ['avast.com'],
+    correctUrl: 'https://www.avast.com',
+    category: SOFTWARE_CATEGORIES.SECURITY,
+    keywords: ['Avast', 'avast'],
+    isChineseBrand: false
+  },
+  {
+    name: 'AVG',
+    officialDomains: ['avg.com'],
+    correctUrl: 'https://www.avg.com',
+    category: SOFTWARE_CATEGORIES.SECURITY,
+    keywords: ['AVG', 'avg'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Bitdefender',
+    officialDomains: ['bitdefender.com'],
+    correctUrl: 'https://www.bitdefender.com',
+    category: SOFTWARE_CATEGORIES.SECURITY,
+    keywords: ['Bitdefender', 'bitdefender'],
+    isChineseBrand: false
+  },
+  {
+    name: 'ESET',
+    officialDomains: ['eset.com'],
+    correctUrl: 'https://www.eset.com',
+    category: SOFTWARE_CATEGORIES.SECURITY,
+    keywords: ['ESET', 'eset'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Avira',
+    officialDomains: ['avira.com'],
+    correctUrl: 'https://www.avira.com',
+    category: SOFTWARE_CATEGORIES.SECURITY,
+    keywords: ['Avira', 'avira'],
+    isChineseBrand: false
+  },
+  {
+    name: 'McAfee',
+    officialDomains: ['mcafee.com'],
+    correctUrl: 'https://www.mcafee.com',
+    category: SOFTWARE_CATEGORIES.SECURITY,
+    keywords: ['McAfee', 'mcafee'],
+    isChineseBrand: false
+  },
+// ========== 下载工具（补充，2026-10-12 假官网专项） ==========
+  {
+    name: 'Free Download Manager',
+    officialDomains: ['freedownloadmanager.org'],
+    correctUrl: 'https://www.freedownloadmanager.org',
+    category: SOFTWARE_CATEGORIES.DOWNLOAD_TOOL,
+    keywords: ['Free Download Manager', 'freedownloadmanager'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Motrix',
+    officialDomains: ['motrix.app'],
+    correctUrl: 'https://motrix.app',
+    category: SOFTWARE_CATEGORIES.DOWNLOAD_TOOL,
+    keywords: ['Motrix', 'motrix'],
+    isChineseBrand: false
+  },
+  {
+    name: 'qBittorrent',
+    officialDomains: ['qbittorrent.org'],
+    correctUrl: 'https://www.qbittorrent.org',
+    category: SOFTWARE_CATEGORIES.DOWNLOAD_TOOL,
+    keywords: ['qBittorrent', 'qbittorrent'],
+    isChineseBrand: false
+  },
+  {
+    name: 'μTorrent',
+    officialDomains: ['utorrent.com'],
+    correctUrl: 'https://www.utorrent.com',
+    category: SOFTWARE_CATEGORIES.DOWNLOAD_TOOL,
+    keywords: ['μTorrent', 'utorrent', 'utorrent'],
+    isChineseBrand: false
+  },
+  {
+    name: 'BitTorrent',
+    officialDomains: ['bittorrent.com'],
+    correctUrl: 'https://www.bittorrent.com',
+    category: SOFTWARE_CATEGORIES.DOWNLOAD_TOOL,
+    keywords: ['BitTorrent', 'bittorrent'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Transmission',
+    officialDomains: ['transmissionbt.com'],
+    correctUrl: 'https://transmissionbt.com',
+    category: SOFTWARE_CATEGORIES.DOWNLOAD_TOOL,
+    keywords: ['Transmission', 'transmissionbt'],
+    isChineseBrand: false
+  },
+// ========== 浏览器（补充，2026-10-12 假官网专项） ==========
+  {
+    name: 'Opera',
+    officialDomains: ['opera.com'],
+    correctUrl: 'https://www.opera.com',
+    category: SOFTWARE_CATEGORIES.BROWSER,
+    keywords: ['Opera', 'opera'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Brave',
+    officialDomains: ['brave.com'],
+    correctUrl: 'https://brave.com',
+    category: SOFTWARE_CATEGORIES.BROWSER,
+    keywords: ['Brave', 'brave'],
+    isChineseBrand: false
+  },
+// ========== 办公/云存储（补充，2026-10-12 假官网专项） ==========
+  {
+    name: 'LibreOffice',
+    officialDomains: ['libreoffice.org'],
+    correctUrl: 'https://www.libreoffice.org',
+    category: SOFTWARE_CATEGORIES.OFFICE,
+    keywords: ['LibreOffice', 'libreoffice'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Obsidian',
+    officialDomains: ['obsidian.md'],
+    correctUrl: 'https://obsidian.md',
+    category: SOFTWARE_CATEGORIES.OFFICE,
+    keywords: ['Obsidian', 'obsidian'],
+    isChineseBrand: false
+  },
+  {
+    name: 'Typora',
+    officialDomains: ['typora.io'],
+    correctUrl: 'https://typora.io',
+    category: SOFTWARE_CATEGORIES.OFFICE,
+    keywords: ['Typora', 'typora'],
+    isChineseBrand: false
+  },
+  {
+    name: '坚果云',
+    officialDomains: ['jianguoyun.com'],
+    correctUrl: 'https://www.jianguoyun.com',
+    category: SOFTWARE_CATEGORIES.CLOUD_STORAGE,
+    keywords: ['坚果云', 'jianguoyun', 'nutstore'],
+    isChineseBrand: true
   }
 ];
 
@@ -2006,7 +2469,7 @@ const strongKeywords = new Set();
  * 低特异性关键词（通用英文词）：不参与标签子串匹配，段匹配仅按 weak 计分。
  * 避免 slack-edge.com / kdocs-team.com / steam.com 等合法域名被判为仿冒。
  */
-const LOW_SPECIFICITY_KEYWORDS = new Set(['edge', 'steam', 'soul', 'clash', 'slack', 'zoom', 'notion', 'postman']);
+const LOW_SPECIFICITY_KEYWORDS = new Set(['edge', 'steam', 'soul', 'clash', 'slack', 'zoom', 'notion', 'postman', 'everything', 'audacity', 'transmission', 'obsidian']);
 
 /**
  * 命名空间归属索引：品牌官方域名的注册域父级 → 品牌条目。
