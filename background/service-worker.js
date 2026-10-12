@@ -1338,7 +1338,8 @@ async function analyzePage(tabId, url, domain, pageMetrics, linkMetrics) {
         syncResult.preliminaryScore,
         syncResult._syncDomainAgeResult,
         syncResult.isConfirmedOfficial,
-        settings
+        settings,
+        syncResult.breakdown
       ).then(async (whoisResult) => {
         await _applyWhoisUpdate(ctxSnapshot, whoisResult);
       }).catch(e => {
@@ -1584,10 +1585,8 @@ async function _applyIcpUpdate(snapshot, icpApi) {
   const mergedBreakdown = { ...(tabState.ruleResults || snapshot.syncBreakdown) };
   mergedBreakdown.rule3 = newRule3;
 
-  const rawTotalScore = Object.values(mergedBreakdown)
-    .reduce((sum, r) => sum + (r && r.score || 0), 0);
-  // ageBonus 减分不应使总分低于 0（与 evaluateSync 中 Math.min 的安全地板一致）
-  const safeTotalScore = Math.max(0, rawTotalScore);
+  // 主干定生死 + 环境分封顶（2026-10-12）：总分不再简单相加
+  const safeTotalScore = ScoringEngine.computeVerdict(mergedBreakdown).totalScore;
   const oldTotalScore = tabState.score || snapshot.syncScore;
 
   tabState.score = safeTotalScore;
@@ -1791,9 +1790,8 @@ chrome.downloads.onCreated.addListener(async (downloadItem) => {
     );
     tabState.ruleResults.downloadLink = downloadLinkResult;
 
-    // 重新计算总分（包含所有规则 + 下载链接跨域检测）
-    const newScore = Object.values(tabState.ruleResults)
-      .reduce((sum, r) => sum + (r.score || 0), 0);
+    // 重新计算总分（主干定生死 + 环境分封顶，2026-10-12）
+    const newScore = ScoringEngine.computeVerdict(tabState.ruleResults).totalScore;
     tabState.score = newScore;
     tabState.riskLevel = newScore >= getEffectiveThreshold('scoreThreshold', SCORE_THRESHOLD) ? RISK_LEVEL.WARNING : RISK_LEVEL.SAFE;
 

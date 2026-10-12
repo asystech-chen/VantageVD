@@ -255,6 +255,15 @@ export const CACHE_CLEANUP_ALARM_NAME = 'cache-cleanup';
 /** 周期清理间隔（分钟）：每 6 小时扫描一次过期/超量缓存 */
 export const CACHE_CLEANUP_PERIOD_MINUTES = 6 * 60;
 
+// ==================== 判定模型：主干定生死 + 环境分封顶（2026-10-12 桶哥拍板） ====================
+/**
+ * 环境信号（规则二/三/四/五 + 域名年龄）合计封顶值。
+ * 未命中「主干」（规则一 strong 域名仿冒高置信）时，总分 = min(环境分, 本值) → 恒 < 阈值(100)，
+ * 从而消除「正常站/官网因备案・域名年龄・链接等环境信号凑分而误报」；
+ * 命中主干则直接判高危。
+ */
+export const ENV_SCORE_CAP = 60;
+
 // ==================== 用户上报（已下线） ====================
 // 上报功能已下线（2026-09-03）：SUBMIT_REPORT 仅保存本地记录。
 // 若将来部署 asystech.cn 后端恢复上报，须同步 data_collection_permissions 声明 + 安装后 consent UI，

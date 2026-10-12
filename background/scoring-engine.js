@@ -45,6 +45,7 @@ import {
   RULE_2_DOMAIN_SUSPICION_THRESHOLD,
   SCORE_RULE_2_PROACTIVE_MAX, SCORE_RULE_2_PER_HIGH_RISK, SCORE_RULE_2_PER_LOW_RISK,
   SCORE_RULE_2_TRUSTED_PLATFORM, SCORE_RULE_2_HIJACK,
+  ENV_SCORE_CAP,
   SCORE_RULE_2_BATCH_THRESHOLD, SCORE_RULE_2_BATCH_MULTIPLIER,
   SCORE_RULE_2_SUSPICION_MULTIPLIER,
   ARCHIVE_EXTENSIONS, AI_PAGE_THRESHOLDS, SAME_PAGE_LINK_THRESHOLD,
@@ -132,6 +133,45 @@ export function setActiveSettings(settings) {
 }
 
 export class ScoringEngine {
+  /**
+   * 综合判定：**主干定生死 + 环境分封顶**（2026-10-12 桶哥拍板）。
+   *
+   * 设计：
+   *   - 主干 = 规则一 strong（域名仿冒高置信）。命中则直接判高危。
+   *   - 环境分 = 规则二/三/四/五 + 域名年龄(含减分) + 其余附加规则（siteBlacklist/downloadLink 等）。
+   *   - 未命中主干时：总分 = min(环境分, ENV_SCORE_CAP) → 恒 < 阈值，正常站不再因环境信号凑分误报。
+   *   - weak（规则一低置信）计入环境分，不单独触发。
+   *   - 阈值保持 SCORE_THRESHOLD(100) 不变，呈现层无需改动。
+   *
+   * 调用方需自行保证 settings 已 push（resolveSetting 读栈顶）。
+   *
+   * @param {Object} breakdown - { rule1..rule5, domainAge, ageBonus, ... }
+   * @returns {{totalScore:number, isSuspicious:boolean, strongTrunk:boolean}}
+   */
+  static computeVerdict(breakdown) {
+    const cap = resolveSetting('envScoreCap', ENV_SCORE_CAP);
+    const threshold = resolveSetting('scoreThreshold', SCORE_THRESHOLD);
+    const bd = breakdown || {};
+    const r1 = bd.rule1 || { score: 0 };
+    const strongTrunk = !!(r1.triggered && r1.severity === 'strong');
+
+    // 环境分：除 rule1 / domainAge / ageBonus 外的所有规则分 + 域名年龄加减分
+    let envRaw = 0;
+    for (const [key, val] of Object.entries(bd)) {
+      if (key === 'rule1' || key === 'domainAge' || key === 'ageBonus') continue;
+      envRaw += (val && val.score) || 0;
+    }
+    if (bd.domainAge) envRaw += bd.domainAge.score || 0;
+    if (bd.ageBonus) envRaw += bd.ageBonus.score || 0;
+    if (!strongTrunk) envRaw += r1.score || 0;
+
+    const envScore = Math.max(0, envRaw);
+    const totalScore = strongTrunk
+      ? Math.max(threshold, (r1.score || 0) + Math.min(envScore, cap))
+      : Math.min(envScore, cap);
+    return { totalScore, isSuspicious: totalScore >= threshold, strongTrunk };
+  }
+
   /**
    * 同步评估（不含 Whois 查询）：规则一~五。
    * 用于快速首屏响应（目标 < 500ms），Whois 结果通过 evaluateDomainAgePart 异步补充。
@@ -251,18 +291,18 @@ export class ScoringEngine {
       }
     }
 
-    // 最终总分（缓存命中时已含域名年龄，缓存未命中时仅含规则一~五）
-    const totalScore = preliminaryScore + domainAgeResult.score + ageBonusResult.score;
-    const isSuspicious = totalScore >= resolveSetting('scoreThreshold', SCORE_THRESHOLD);
+    // 最终判定：主干定生死 + 环境分封顶（2026-10-12）
+    const breakdown = {
+      rule1: result1, rule2: result2, rule3: result3, rule4: result4, rule5: result5,
+      domainAge: domainAgeResult, ageBonus: ageBonusResult
+    };
+    const { totalScore, isSuspicious } = this.computeVerdict(breakdown);
 
     const result = {
       totalScore,
       isSuspicious,
       riskLevel: isSuspicious ? RISK_LEVEL.WARNING : RISK_LEVEL.SAFE,
-      breakdown: {
-        rule1: result1, rule2: result2, rule3: result3, rule4: result4, rule5: result5,
-        domainAge: domainAgeResult, ageBonus: ageBonusResult
-      },
+      breakdown,
       matchedEntry: result1.matchedEntry || null,
       correctUrl: result1.correctUrl || null,
       officialName: result1.officialName || null,
@@ -286,12 +326,17 @@ export class ScoringEngine {
    * @param {boolean} isConfirmedOfficial - 是否为官方站点
    * @returns {Promise<Object>} { domainAgeResult, ageBonusResult, totalScore, isSuspicious, riskLevel }
    */
-  static async evaluateDomainAgePart(domain, preliminaryScore, syncDomainAgeResult, isConfirmedOfficial, settings = null) {
+  static async evaluateDomainAgePart(domain, preliminaryScore, syncDomainAgeResult, isConfirmedOfficial, settings = null, breakdown = null) {
     let domainAgeResult = syncDomainAgeResult || { score: 0, triggered: false, status: 'pass', detail: '', detailCN: '域名年龄: 未检测', creationDays: -1 };
     let ageBonusResult = { score: 0, triggered: false, status: 'pass', detail: '', detailCN: '域名减分: 未应用', bonusScore: 0 };
 
     // 推入当前 settings 到栈顶
     setActiveSettings(settings);
+
+    // 主干定生死 + 环境分封顶：用同步阶段的 breakdown + 最新域名年龄重新判定
+    const _verdict = (ageRes, bonusRes) => this.computeVerdict(
+      Object.assign({}, breakdown || {}, { domainAge: ageRes, ageBonus: bonusRes })
+    );
 
     if (isConfirmedOfficial) {
       return { domainAgeResult, ageBonusResult, totalScore: preliminaryScore, isSuspicious: false, riskLevel: RISK_LEVEL.SAFE };
@@ -311,7 +356,8 @@ export class ScoringEngine {
           detailCN: `域名年龄: API 查询失败${errPhase}`,
           creationDays: -1
         };
-        return { domainAgeResult, ageBonusResult, totalScore: preliminaryScore, isSuspicious: preliminaryScore >= resolveSetting('scoreThreshold', SCORE_THRESHOLD), riskLevel: preliminaryScore >= resolveSetting('scoreThreshold', SCORE_THRESHOLD) ? RISK_LEVEL.WARNING : RISK_LEVEL.SAFE };
+        const vFail = _verdict(domainAgeResult, ageBonusResult);
+        return { domainAgeResult, ageBonusResult, totalScore: vFail.totalScore, isSuspicious: vFail.isSuspicious, riskLevel: vFail.isSuspicious ? RISK_LEVEL.WARNING : RISK_LEVEL.SAFE };
       }
 
       if (whoisResult.creationDays < 0) {
@@ -321,7 +367,8 @@ export class ScoringEngine {
           detailCN: '域名年龄: 注册时间未知',
           creationDays: -1
         };
-        return { domainAgeResult, ageBonusResult, totalScore: preliminaryScore, isSuspicious: preliminaryScore >= resolveSetting('scoreThreshold', SCORE_THRESHOLD), riskLevel: preliminaryScore >= resolveSetting('scoreThreshold', SCORE_THRESHOLD) ? RISK_LEVEL.WARNING : RISK_LEVEL.SAFE };
+        const vUnknown = _verdict(domainAgeResult, ageBonusResult);
+        return { domainAgeResult, ageBonusResult, totalScore: vUnknown.totalScore, isSuspicious: vUnknown.isSuspicious, riskLevel: vUnknown.isSuspicious ? RISK_LEVEL.WARNING : RISK_LEVEL.SAFE };
       }
 
       const x = whoisResult.creationDays;
@@ -375,8 +422,9 @@ export class ScoringEngine {
       }
     }
 
-    const totalScore = newPreliminaryScore + ageBonusResult.score;
-    const isSuspicious = totalScore >= resolveSetting('scoreThreshold', SCORE_THRESHOLD);
+    const verdict = _verdict(domainAgeResult, ageBonusResult);
+    const totalScore = verdict.totalScore;
+    const isSuspicious = verdict.isSuspicious;
 
     const result = {
       domainAgeResult,
