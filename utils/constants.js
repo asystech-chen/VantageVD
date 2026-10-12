@@ -245,6 +245,16 @@ export const STORAGE_KEYS = {
 // 缓存有效期（毫秒）
 export const CACHE_TTL = 24 * 60 * 60 * 1000;  // 24小时
 
+// ==================== 缓存清理（配额治理，2026-10-12 移植上游 0fd5a55） ====================
+/** 域名缓存 LRU 保留条数：定期/紧急清理时保留最近访问的 N 条 */
+export const CACHE_LRU_KEEP_COUNT = 100;
+/** 缓存条目 lastAccess 刷新限频：get() 命中时距上次刷新 ≥ 该间隔才写回，避免 IO 放大 */
+export const CACHE_LAST_ACCESS_REFRESH_MS = 10 * 60 * 1000; // 10 分钟
+/** 周期清理 alarm 名称 */
+export const CACHE_CLEANUP_ALARM_NAME = 'cache-cleanup';
+/** 周期清理间隔（分钟）：每 6 小时扫描一次过期/超量缓存 */
+export const CACHE_CLEANUP_PERIOD_MINUTES = 6 * 60;
+
 // ==================== 用户上报（已下线） ====================
 // 上报功能已下线（2026-09-03）：SUBMIT_REPORT 仅保存本地记录。
 // 若将来部署 asystech.cn 后端恢复上报，须同步 data_collection_permissions 声明 + 安装后 consent UI，

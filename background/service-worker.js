@@ -22,7 +22,7 @@
 
 import { ScoringEngine, setActiveSettings } from './scoring-engine.js';
 import { DomainDatabase } from './domain-database.js';
-import { CacheManager } from './cache-manager.js';
+import { CacheManager, invalidateCacheTtl } from './cache-manager.js';
 import { DownloadBlacklist } from './download-blacklist.js';
 import { SiteBlacklist } from './site-blacklist.js';
 import { ResourceResolver } from './resource-resolver/index.js';
@@ -35,10 +35,12 @@ import {
   VERSION, GITHUB_RELEASES_API_URL, GITHUB_RELEASES_PAGE,
   UPDATE_VERSION_API_URL, UPDATE_CHANNEL, UPDATE_CHECK_TIMEOUT_MS, UPDATE_RETRY_DELAY_MINUTES,
   ICP_API_CONFIG, SCORE_SITE_BLACKLIST,
-  DOWNLOAD_INTENT_KEYWORDS, DOWNLOAD_INTENT_PATTERN_SOURCES
+  DOWNLOAD_INTENT_KEYWORDS, DOWNLOAD_INTENT_PATTERN_SOURCES,
+  CACHE_CLEANUP_ALARM_NAME, CACHE_CLEANUP_PERIOD_MINUTES, CACHE_LRU_KEEP_COUNT
 } from '../utils/constants.js';
 import { SETTINGS_DEFAULTS } from '../utils/settings-schema.js';
 import { isFullyTrusted } from '../utils/exemptions/index.js';
+import { normalizeWhitelistEntry, isWhitelistedDomain } from '../utils/whitelist-matcher.js';
 
 // ==================== URL 协议守卫 ====================
 
@@ -375,10 +377,22 @@ function createTabState() {
   };
 }
 
+/**
+ * 标签页状态存储介质选择（配额治理，2026-10-12 移植上游 0fd5a55）。
+ * tabState 为临时数据（浏览器会话内有效，SW 重启后重新分析即可），
+ * 优先使用 chrome.storage.session（内存独立配额，不占用 storage.local 的持久配额，
+ * 浏览器会话结束自动清空）；Firefox 旧版等无 session 时回退 local。
+ */
+function _tabStateStorage() {
+  return (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.session)
+    ? chrome.storage.session
+    : chrome.storage.local;
+}
+
 async function loadTabState(tabId) {
   try {
     const key = STORAGE_KEYS.TAB_STATE_PREFIX + tabId;
-    const r = await chrome.storage.local.get(key);
+    const r = await _tabStateStorage().get(key);
     return r[key] || createTabState();
   } catch (e) { return createTabState(); }
 }
@@ -387,14 +401,35 @@ async function saveTabState(tabId, s) {
   try {
     const sanitizedState = { ...s };
     delete sanitizedState.pageText; // 不持久化页面正文，仅保留派生指标 textSignals
-    await chrome.storage.local.set({ [STORAGE_KEYS.TAB_STATE_PREFIX + tabId]: sanitizedState });
+    await _tabStateStorage().set({ [STORAGE_KEYS.TAB_STATE_PREFIX + tabId]: sanitizedState });
   } catch (e) { /* ignore */ }
 }
 
 async function clearTabState(tabId) {
   try {
-    await chrome.storage.local.remove(STORAGE_KEYS.TAB_STATE_PREFIX + tabId);
+    await _tabStateStorage().remove(STORAGE_KEYS.TAB_STATE_PREFIX + tabId);
   } catch (e) { /* ignore */ }
+}
+
+/**
+ * 一次性清理：旧版本遗留的 chrome.storage.local 中的 tab_state_* 键。
+ * tabState 已迁移至 chrome.storage.session，local 中的残留仅占配额无任何价值。
+ * 注意：仅当当前介质确为 session 时才清理 local 残留——
+ * Firefox 无 chrome.storage.session 时回退路径下 tabState 存于 local，
+ * 此时清理会删除活跃标签页的检测状态。
+ */
+async function cleanupLegacyLocalTabStates() {
+  if (!(typeof chrome !== 'undefined' && chrome.storage && chrome.storage.session)) return;
+  try {
+    const all = await chrome.storage.local.get(null);
+    const keys = Object.keys(all).filter(k => k.startsWith(STORAGE_KEYS.TAB_STATE_PREFIX));
+    if (keys.length > 0) {
+      await chrome.storage.local.remove(keys);
+      console.log(`[ServiceWorker] 已清理旧版遗留的 ${keys.length} 条 local tab_state`);
+    }
+  } catch (e) {
+    console.warn('[ServiceWorker] 清理旧版遗留 tab_state 失败:', e.message);
+  }
 }
 
 // ==================== 工具栏图标更新 ====================
@@ -465,7 +500,7 @@ function setIconWhitelist(tabId) {
 //
 // 性能优化：内存缓存 + storage.onChanged 失效机制，避免每次操作都读存储。
 
-/** @type {Set<string>|null} 内存缓存的白名单域名集合 */
+/** @type {string[]|null} 内存缓存的白名单条目（域名 / 通配符，已规范化） */
 let _whitelistCache = null;
 
 /**
@@ -479,7 +514,7 @@ async function loadWhitelist() {
   try {
     const r = await chrome.storage.local.get(STORAGE_KEYS.WHITELIST);
     const list = r[STORAGE_KEYS.WHITELIST] || [];
-    _whitelistCache = new Set(list);
+    _whitelistCache = list;
     return list;
   } catch (e) { return []; }
 }
@@ -491,9 +526,13 @@ function _invalidateWhitelistCache() {
 
 async function saveWhitelist(whitelist) {
   try {
-    await chrome.storage.local.set({ [STORAGE_KEYS.WHITELIST]: whitelist });
+    // 规范化 + 去重，保证存储中的条目形式统一（小写、无协议/路径/尾点）
+    const normalized = [...new Set(
+      (whitelist || []).map(d => normalizeWhitelistEntry(d)).filter(Boolean)
+    )];
+    await chrome.storage.local.set({ [STORAGE_KEYS.WHITELIST]: normalized });
     // 同步更新内存缓存
-    _whitelistCache = new Set(whitelist);
+    _whitelistCache = normalized;
   } catch (e) { /* ignore */ }
 }
 
@@ -512,11 +551,9 @@ async function isWhitelisted(url) {
       return true;
     }
   }
-  if (_whitelistCache) {
-    return _whitelistCache.has(domain);
-  }
   const whitelist = await loadWhitelist();
-  return whitelist.includes(domain);
+  // 支持精确域名与通配符条目（*.example.com / *）
+  return isWhitelistedDomain(domain, whitelist);
 }
 
 /**
@@ -528,12 +565,12 @@ async function addToWhitelist(url) {
   await SiteBlacklist.remove(domain);
 
   // 先用内存缓存快速判断，避免无谓的存储读取
-  if (_whitelistCache && _whitelistCache.has(domain)) {
+  if (_whitelistCache && isWhitelistedDomain(domain, _whitelistCache)) {
     console.log('[ServiceWorker] 域名已在白名单:', domain);
     return;
   }
   const whitelist = await loadWhitelist();
-  if (!whitelist.includes(domain)) {
+  if (!isWhitelistedDomain(domain, whitelist)) {
     whitelist.push(domain);
     await saveWhitelist(whitelist);
     console.log('[ServiceWorker] 已加入白名单:', domain);
@@ -546,7 +583,8 @@ async function addToWhitelist(url) {
 async function removeFromWhitelist(url) {
   const domain = UrlUtils.extractHostname(url);
   const whitelist = await loadWhitelist();
-  const idx = whitelist.indexOf(domain);
+  const norm = normalizeWhitelistEntry(domain);
+  const idx = whitelist.findIndex(d => normalizeWhitelistEntry(d) === norm);
   if (idx !== -1) {
     whitelist.splice(idx, 1);
     await saveWhitelist(whitelist);
@@ -2409,15 +2447,34 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
   _authenticationTabs.delete(tabId);
 });
 
+// 标签页替换清理（如 prerender 激活、会话恢复时 tabId 变化）
+// 将旧 tabId 的状态迁移到新 tabId（而非直接删除），避免激活页保持"未分析"；
+// 旧 tabId 的会话级内存状态仍需清理。
+chrome.tabs.onReplaced.addListener((addedTabId, removedTabId) => {
+  (async () => {
+    const oldState = await loadTabState(removedTabId);
+    if (oldState && oldState.url) {
+      await saveTabState(addedTabId, oldState);
+    }
+    await clearTabState(removedTabId);
+  })().catch(() => {});
+  _warningCooldown.delete(removedTabId);
+  _authenticationTabs.delete(removedTabId);
+});
+
 // 安装/更新
 chrome.runtime.onInstalled.addListener(async (details) => {
   console.log('[ServiceWorker] 扩展已安装/更新:', details.reason);
   if (details.reason === 'update') {
     await CacheManager.clearAll();
     await DownloadBlacklist.cleanup();
+    // 一次性清理旧版遗留的 local tab_state（已迁移 chrome.storage.session）
+    await cleanupLegacyLocalTabStates();
   }
   // 设置定时更新检查（每 24 小时）
   await chrome.alarms.create('updateCheck', { periodInMinutes: 1440 });
+  // 设置定时缓存清理（每 6 小时，配额治理）
+  await chrome.alarms.create(CACHE_CLEANUP_ALARM_NAME, { periodInMinutes: CACHE_CLEANUP_PERIOD_MINUTES });
   // 首次检查
   checkForUpdate();
 });
@@ -2426,8 +2483,36 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === 'updateCheck') {
     checkForUpdate();
+  } else if (alarm.name === CACHE_CLEANUP_ALARM_NAME) {
+    runCacheCleanup();
   }
 });
+
+/**
+ * 周期缓存清理：删除过期 domain_cache + LRU 裁剪（保留最近 CACHE_LRU_KEEP_COUNT 条）。
+ * 同时兼容旧版本升级：清理 local 中遗留的 tab_state_*（仅当当前介质为 session 时，
+ * 避免 Firefox 回退路径下误删活跃标签页状态）。
+ * 清理统计仅输出日志，不阻塞主流程。
+ */
+async function runCacheCleanup() {
+  try {
+    const stats = await CacheManager.cleanup({ keepRecentCount: CACHE_LRU_KEEP_COUNT });
+    let legacyCleaned = 0;
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.session) {
+      try {
+        const all = await chrome.storage.local.get(null);
+        const legacyKeys = Object.keys(all).filter(k => k.startsWith(STORAGE_KEYS.TAB_STATE_PREFIX));
+        if (legacyKeys.length > 0) {
+          await chrome.storage.local.remove(legacyKeys);
+          legacyCleaned = legacyKeys.length;
+        }
+      } catch (e) { /* 遗留清理失败不影响主清理 */ }
+    }
+    console.log(`[ServiceWorker] 缓存清理完成: 删除 ${stats.removed} 条(过期/LRU), 保留 ${stats.kept}/${stats.total} 条, 遗留 tab_state ${legacyCleaned} 条`);
+  } catch (e) {
+    console.error('[ServiceWorker] 缓存清理失败:', e.message);
+  }
+}
 
 // 存储变更监听：白名单 / 黑名单 / 设置被其他页面修改时使内存缓存失效
 chrome.storage.onChanged.addListener((changes, area) => {
@@ -2440,6 +2525,8 @@ chrome.storage.onChanged.addListener((changes, area) => {
     }
     if (changes[STORAGE_KEYS.GLOBAL_SETTINGS]) {
       _settingsCache = null;
+      // 用户修改 cache_ttlHours 后即时生效（失效 CacheManager 的 TTL 缓存）
+      invalidateCacheTtl();
     }
   }
 });
